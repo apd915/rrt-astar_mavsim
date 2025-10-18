@@ -1,0 +1,9 @@
+{
+    "ros.distro": "humble",
+
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}",
+        "${workspaceFolder}/../eVTOL_BSplines",
+        "${workspaceFolder}/../eVTOL_BSplines/path_generator"
+    ]
+}

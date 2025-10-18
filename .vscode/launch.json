@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Debug",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/mavsim_python/launch_files/chap12/mavsim_chap12_3D.py",  // or your main entrypoint
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/eVTOL_BSplines:${workspaceFolder}/eVTOL_BSplines/path_generator"
+      },
+      "justMyCode": false
+    }
+  ]
+}
