@@ -1,13 +1,18 @@
 import numpy as np
 import parameters.planner_parameters as PLAN
-from shapely.geometry import MultiPoints
+from shapely.geometry import MultiPoint
+from tools.obstacles import RectangularObstacle
 
+
+#creates the set of possible obstalcle types
+obstacleTypes = ['rectangular', 'spherical', 'walls']
 
 
 class MsgWorldMap:
 
     #initialization function
     def __init__(self,
+                 obstacleFieldType: str,
                  numDimensions: int,
                  fieldWidth: float = PLAN.city_width,
                  obstacleWidthRatio: float = PLAN.obstacleWidthRatio,
@@ -17,6 +22,7 @@ class MsgWorldMap:
         
 
         #saves all fo the above
+        self.obstacleFieldType = obstacleFieldType
         self.numDimensions = numDimensions
         self.fieldWidth = fieldWidth
         self.obstacleWidthRatio = obstacleWidthRatio
@@ -35,10 +41,16 @@ class MsgWorldMap:
 
     
     def init_2D_map(self):
-        pass
+        if self.obstacleFieldType == obstacleTypes[0]:
+            obstacle = RectangularObstacle(dimensions_obs=np.array([[10.0],[100.0]]),
+                                           translation_obs=np.array([[0.0],[0.0]]),
+                                           rotation_obsToWorld=np.array([[1.0, 0.0],
+                                                                         [0.0, 1.0]]))
+        
+        potato = 0
 
     def init_3D_map(self):
 
         pass
 
-    
+

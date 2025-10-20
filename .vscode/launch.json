@@ -5,7 +5,7 @@
       "name": "Python: Debug",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/mavsim_python/launch_files/chap12/mavsim_chap12_3D.py",  // or your main entrypoint
+      "program": "${workspaceFolder}/launchFiles/rrt_sfc_launch.py",  // or your main entrypoint
       "env": {
         "PYTHONPATH": "${workspaceFolder}/eVTOL_BSplines:${workspaceFolder}/eVTOL_BSplines/path_generator"
       },

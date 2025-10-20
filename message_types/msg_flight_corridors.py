@@ -153,3 +153,6 @@ class MsgFlightCorridor:
                       rotation=self.R_SFCToWorld)
         
         return tempSFC
+    
+    def getNumDimensions(self):
+        return self.numDimensions

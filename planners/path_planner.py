@@ -18,3 +18,6 @@ class PathPlanner:
         
         #creates a waypoints message class
         self.waypoints = MsgWaypoints_SFC()
+
+        #creates the rrt B-Spline creator function
+        self.rrt_bspline = 
