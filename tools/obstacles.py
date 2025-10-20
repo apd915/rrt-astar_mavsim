@@ -65,6 +65,11 @@ class RectangularObstacle:
         #gets the vertices in the world frame for the planar vertices (on a projected subspace)
         vertices_worldFrame_2D_plane = self.rotation_obsToWorld @ vertices_shifted_objectFrame
 
+        numVerticesFace = np.size(vertices_unshifted_objectFrame)[1]
+
+        #creates the altitude vectors
+        altitudeVector_bottom = np.
+
         potato = 0
 
         
