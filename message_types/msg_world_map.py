@@ -38,6 +38,7 @@ class MsgWorldMap:
         elif self.numDimensions == 3:
 
             self.init_3D_map()
+            potato = 0
 
     
     def init_2D_map(self):
