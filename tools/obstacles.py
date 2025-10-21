@@ -129,6 +129,49 @@ class RectangularObstacle:
     
     def getVertices_obstacle_3D(self):
         return self.vertices_shifted_worldFrame_3D
+    
+
+    def getVertices_projection_2D_list(self):
+
+        verticesShape = np.shape(self.vertices_projection_2D_plane)
+        numVertices = verticesShape[1]
+
+        vertices_list = []
+        #
+        for i in range(numVertices):
+
+            tempVertex = (self.vertices_projection_2D_plane)[i:(i+1),:]
+            vertices_list.append(tempVertex)
+
+        return vertices_list
+    
+    def getVertices_building_2D_list(self):
+
+        verticesShape = np.shape(self.vertices_building_worldFrame)
+        numVertices = verticesShape[1]
+
+        vertices_list = []
+
+        for i in range(numVertices):
+
+            tempVertex = (self.vertices_building_worldFrame)[i:(i+1),:]
+            vertices_list.append(tempVertex)
+
+        return vertices_list
+    
+    def getVertices_obstacle_3D_list(self):
+
+        verticesShape = np.shape(self.vertices_shifted_worldFrame_3D)
+        numVertices = verticesShape[1]
+
+        verticesList = []
+
+        for i in range(numVertices):
+
+            tempVertex = self.vertices_shifted_worldFrame_3D[i:(i+1),:]
+            verticesList.append(tempVertex)
+        return verticesList
+
 
     ######################################################
     #3D section
