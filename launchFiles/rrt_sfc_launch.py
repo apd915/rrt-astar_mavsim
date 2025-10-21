@@ -10,17 +10,16 @@ from message_types.msg_world_map import MsgWorldMap
 
 
 worldMap = MsgWorldMap(obstacleFieldType='rectangular',
-                       numDimensions = 2,
+                       numDimensions = 3,
                        fieldWidth=2000.0,
                        obstacleWidthRatio=0.5,
                        obstacleWidth_sigma=1.0,
                        altitude=100.0,
                        numBlocks=4)
 
+#obstacles_2D = worldMap.get_2D_obstacles()
+obstacles_3D = worldMap.get_3D_obstacles()
+
+
 
 potato = 0
-
-samwise = 0
-
-
-tomato = 0
