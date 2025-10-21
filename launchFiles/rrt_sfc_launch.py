@@ -19,3 +19,6 @@ worldMap = MsgWorldMap(obstacleFieldType='rectangular',
 
 
 potato = 0
+
+
+tomato = 0
