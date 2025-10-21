@@ -42,6 +42,9 @@ class RectangularObstacle:
     #creates the init function for the size 2 maps
     def init_2D(self):
 
+        if self.building_height is None:
+            raise ValueError("No building Height Selected")
+
         #gets the min and max bounds
         minBounds, maxBounds = self.getBounds_obstacleFrame()
 
@@ -63,12 +66,24 @@ class RectangularObstacle:
         vertices_shifted_objectFrame = vertices_unshifted_objectFrame + self.translation_obs
         
         #gets the vertices in the world frame for the planar vertices (on a projected subspace)
-        vertices_worldFrame_2D_plane = self.rotation_obsToWorld @ vertices_shifted_objectFrame
+        self.vertices_projection_2D_plane = self.rotation_obsToWorld @ vertices_shifted_objectFrame
 
-        numVerticesFace = np.size(vertices_unshifted_objectFrame)[1]
+        #section to get the Normal vectors
+
+
+
+        ###################################################################
+        #section for constructing the 3D building
+        numVerticesFace = np.shape(vertices_unshifted_objectFrame)[1]
 
         #creates the altitude vectors
-        altitudeVector_bottom = np.
+        altitudeVector_bottom = np.full((1,numVerticesFace), 0)
+        altitudeVector_top = np.full((1,numVerticesFace), self.building_height)
+        
+        bottomVectors = np.concatenate((self.vertices_projection_2D_plane, altitudeVector_bottom), axis=0)
+        topVectors = np.concatenate((self.vertices_projection_2D_plane, altitudeVector_top), axis=0)
+
+        self.vertices_building_worldFrame = np.concatenate((bottomVectors, topVectors), axis=1)
 
         potato = 0
 
@@ -78,15 +93,42 @@ class RectangularObstacle:
 
     def init_3D(self):
 
+        #gets the bounds for the 3 dimensions
+        minBounds, maxBounds = self.getBounds_obstacleFrame()
+
+        x_min = minBounds.item(0)
+        y_min = minBounds.item(1)
+        z_min = minBounds.item(2)
+
+        x_max = maxBounds.item(0)
+        y_max = maxBounds.item(1)
+        z_max = maxBounds.item(2)
+
+        #creates the complete vector of unrotated vertices
+        vertices_unshifted_obsFrame = np.array([[x_min, x_max, x_max, x_min, x_min, x_max, x_max, x_min],
+                                                [y_min, y_min, y_max, y_max, y_min, y_min, y_max, y_max],
+                                                [z_min, z_min, z_min, z_min, z_max, z_max, z_max, z_max]])
+        #gets them shifted in the obstacle frame
+        vertices_shifted_obsFrame = vertices_unshifted_obsFrame + self.translation_obs
+
+        #rotates them to the world frame
+        self.vertices_shifted_worldFrame_3D = self.rotation_obsToWorld @ vertices_shifted_obsFrame
+
         pass
 
     #################################################
     #2D section
     #degines the function to get the vertices for the 
-    def getVertices_2D(self):
+    def getVertices_projection_2D(self):
 
-        return self.vertices_worldFrame_2D
+        return self.vertices_projection_2D_plane
     
+    def getVertices_building_2D(self):
+
+        return self.vertices_building_worldFrame
+    
+    def getVertices_obstacle_3D(self):
+        return self.vertices_shifted_worldFrame_3D
 
     ######################################################
     #3D section
