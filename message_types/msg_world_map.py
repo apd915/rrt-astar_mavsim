@@ -41,11 +41,20 @@ class MsgWorldMap:
 
     
     def init_2D_map(self):
-        if self.obstacleFieldType == obstacleTypes[0]:
-            obstacle = RectangularObstacle(dimensions_obs=np.array([[10.0],[100.0]]),
-                                           translation_obs=np.array([[0.0],[0.0]]),
-                                           rotation_obsToWorld=np.array([[1.0, 0.0],
-                                                                         [0.0, 1.0]]))
+        
+        #iterates over the north positions
+        for i in range(self.numBlocks):
+            #iterates over the east position
+            for j in range(self.numBlocks):
+                
+                #gets the current position
+                currentPosition = np.array([[],[]])
+
+                if self.obstacleFieldType == obstacleTypes[0]:
+                    obstacle = RectangularObstacle(dimensions_obs=np.array([[10.0],[100.0]]),
+                                                   translation_obs=np.array([[0.0],[0.0]]),
+                                                   rotation_obsToWorld=np.array([[1.0, 0.0],
+                                                                                 [0.0, 1.0]]))
         
         potato = 0
 
