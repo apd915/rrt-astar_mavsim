@@ -3,7 +3,7 @@ import parameters.flightCorridor_parameters as FLPARAM
 from shapely.geometry import MultiPoint
 
 from eVTOL_BSplines.submodules.path_generator.path_generation.safe_flight_corridor import SFC, SFC_Data
-from tools.rotations import euler_to_rotation
+from tools.rotations import euler_to_rotation, euler_to_rotation_2D
 
 
 #creates the message class for the 3D flight corridor
@@ -67,27 +67,26 @@ class MsgFlightCorridor:
         centerPosition = self.primaryPosition + centerVectorNorm * (self.centerLength / 2.0)
         self.translation_world = centerPosition
 
+        translation_world_2D = self.translation_world[:2,:]
+
         #grom the center vector norm, we get the north and east components
         centerVectorNorm_north = centerVectorNorm.item(0)
         centerVectorNorm_east = centerVectorNorm.item(1)
 
         #gets the yaw angle
         self.yaw_angle = np.arctan2(centerVectorNorm_east, centerVectorNorm_north)
+        
+        self.R_SFCToWorld_2D = euler_to_rotation_2D(psi=self.yaw_angle)
 
-        #gets the rotation matrix from the pitch, yaw, and roll angles
-        self.R_SFCToWorld = euler_to_rotation(phi=0.0,
-                                              theta=0.0,
-                                              psi=self.yaw_angle)
+        self.R_worldToSFC_2D = self.R_SFCToWorld_2D.T
 
-        #gets the rotation for world to sfc
-        self.R_WorldToSFC = self.R_SFCToWorld.T
 
         #gets the translation in the sfc grame
-        self.translation_SFC = self.R_WorldToSFC @ self.translation_world
+        self.translation_SFC = self.R_worldToSFC_2D @ translation_world_2D
 
         tempSFC = SFC(dimensions=self.dimensions,
                       translation=self.translation_SFC,
-                      rotation=self.R_SFCToWorld)
+                      rotation=self.R_SFCToWorld_2D)
         
         return tempSFC
 
@@ -156,3 +155,17 @@ class MsgFlightCorridor:
     
     def getNumDimensions(self):
         return self.numDimensions
+       
+
+
+    def getConvexHull(self)->MultiPoint.convex_hull:
+
+        #gets the normals and vertices
+        tempSFC = self.getSFC()
+
+        #gets the normals and vertices listt
+        normalsList, verticesList = tempSFC.getNormalsVertices()
+
+
+        pass
+

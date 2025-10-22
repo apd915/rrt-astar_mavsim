@@ -89,7 +89,9 @@ class RRTBSpline:
                                               secondaryPosition=newPosition_candidate,
                                               primaryPosition_index=minCostParentIndex)
 
-
+            #calls the function to check for intersection
+            intesectionDetect = intersectionDetected(corridor=sfc_candidate,
+                                                     world_map=worldMap)
 
             pass
     
@@ -218,4 +220,12 @@ def randomPosition_3D(world_map: MsgWorldMap):
 def intersectionDetected(corridor: MsgFlightCorridor,
                          world_map: MsgWorldMap):
     
+
+    #gets the corridor convex Hull
     
+    #gets the convex hulls list of the world map
+    map_convex_hulls = world_map.getConvexHullsList()
+
+
+    #gets the corridor convex hulls
+    corridor_convex_hull = corridor.getConvexHull()

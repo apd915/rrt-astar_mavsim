@@ -149,10 +149,30 @@ class MsgWorldMap:
 
         #case 2 dimensions
         if self.numDimensions == 2:
+
+            tempList = self.get_2D_obstacles()
             
             #gets the vertices list
-            for NorthList in self.obstacleList_2D:
+            for NorthList in tempList:
                 for tempObject in NorthList:
+                    
+                    #gets the vertices
+                    tempVertices = tempObject.getVertices_building_2D_list()
 
+                    tempConvexHull = MultiPoint(tempVertices).convex_hull
+                    convexHullsList.append(tempConvexHull)
 
-                    pass
+        elif self.numDimensions == 3:
+
+            tempList = self.get_3D_obstacles()
+
+            for NorthList in tempList:
+                for eastList in NorthList:
+                    for tempObject in eastList:
+
+                        tempVertices = tempObject.getVertices_obstacle_3D_list()
+
+                        tempConvexHull = MultiPoint(tempVertices).convex_hull
+                        convexHullsList.append(tempConvexHull)
+
+        return convexHullsList
