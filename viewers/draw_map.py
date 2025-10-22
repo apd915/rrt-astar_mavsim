@@ -28,13 +28,46 @@ class DrawMap:
         #if this is a second dimension thing
         if numDimensions == 2:
             #gets the vertices list
-            
-            pass
+            obstacleList_2D = map.get_2D_obstacles()
 
+            for northList in obstacleList_2D:
+                for object in northList:
+                    
+                    #gets the vertices list of the object
+                    objectVertices = object.getVertices_building_2D_list()
+
+                    currentMeshes, currentColors = self.building_vert_face(vertices=objectVertices)
+
+                    #appends to the full mesh and colors list
+                    fullMesh = np.concatenate((fullMesh, currentMeshes), axis=0)
+                    fullMeshColors = np.concatenate((fullMeshColors, currentColors), axis=0)
+                    
         elif numDimensions == 3:
+            #gets the obstacles list
+            obstacleList_3D = map.get_3D_obstacles()
+
+            for northList in obstacleList_3D:
+                for eastList in northList:
+                    for object in eastList:
+
+                        objectVertices = object.getVertices_obstacle_3D_list()
+
+                        currentMeshes, currentColors = self.building_vert_face(vertices=objectVertices)
+    
+                        #appends to the full mesh and colors list
+                        fullMesh = np.concatenate((fullMesh, currentMeshes), axis=0)
+                        fullMeshColors = np.concatenate((fullMeshColors, currentColors), axis=0)
 
             pass
 
+        self.ground_mesh = gl.GLMeshItem(
+            vertexes=fullMesh,  # defines the triangular mesh (Nx3x3)
+            vertexColors=fullMeshColors,  # defines mesh colors (Nx1)
+            drawEdges=True,  # draw edges between mesh elements
+            smooth=False,  # speeds up rendering
+            computeNormals=False)  # speeds up rendering
+        self.ground_mesh.setGLOptions('translucent')
+        self.window.addItem(self.ground_mesh)
 
     def building_vert_face(self,
                            vertices: list[np.ndarray]):
@@ -60,19 +93,24 @@ class DrawMap:
                            [pts[3], pts[0], pts[4]],
                            [pts[4], pts[5], pts[6]],
                            [pts[4], pts[6], pts[7]]])
-        
+
+        red = np.array([1., 0., 0., 1])
+        green = np.array([0., 1., 0., 1])
+        blue = np.array([0., 0., 1., 1])
+        yellow = np.array([1., 1., 0., 1])
+
         meshColors = np.empty((12, 3, 4), dtype=np.float32)
-        meshColors[0] = 'g'
-        meshColors[1] = 'g'
-        meshColors[2] = 'g'
-        meshColors[3] = 'g'
-        meshColors[4] = 'g'
-        meshColors[5] = 'g'
-        meshColors[6] = 'g'
-        meshColors[7] = 'g'
-        meshColors[8] = 'y'
-        meshColors[9] = 'y'
-        meshColors[10] = 'y'
-        meshColors[11] = 'y'
+        meshColors[0] = green
+        meshColors[1] = green
+        meshColors[2] = green
+        meshColors[3] = green
+        meshColors[4] = green
+        meshColors[5] = green
+        meshColors[6] = green
+        meshColors[7] = green
+        meshColors[8] = yellow
+        meshColors[9] = yellow
+        meshColors[10] = yellow
+        meshColors[11] = yellow
 
         return meshes, meshColors

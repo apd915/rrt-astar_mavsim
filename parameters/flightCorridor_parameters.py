@@ -9,6 +9,9 @@ endExtension = 30.0
 #sets the initial segment length
 segmentLength = 400.0
 
+#sets the rho variable
+rho = np.array([[1.0],[1.0],[1.0]])
+
 #sets the B-Spline degree
 degree = 3
 #sets the number of intervals of interest

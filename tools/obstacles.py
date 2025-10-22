@@ -140,7 +140,7 @@ class RectangularObstacle:
         #
         for i in range(numVertices):
 
-            tempVertex = (self.vertices_projection_2D_plane)[i:(i+1),:]
+            tempVertex = (self.vertices_projection_2D_plane)[:,i:(i+1)]
             vertices_list.append(tempVertex)
 
         return vertices_list
@@ -154,7 +154,7 @@ class RectangularObstacle:
 
         for i in range(numVertices):
 
-            tempVertex = (self.vertices_building_worldFrame)[i:(i+1),:]
+            tempVertex = (self.vertices_building_worldFrame)[:,i:(i+1)]
             vertices_list.append(tempVertex)
 
         return vertices_list
@@ -168,7 +168,7 @@ class RectangularObstacle:
 
         for i in range(numVertices):
 
-            tempVertex = self.vertices_shifted_worldFrame_3D[i:(i+1),:]
+            tempVertex = self.vertices_shifted_worldFrame_3D[:,i:(i+1)]
             verticesList.append(tempVertex)
         return verticesList
 

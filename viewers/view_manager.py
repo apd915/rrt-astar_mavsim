@@ -2,17 +2,39 @@
 
 import pyqtgraph as pg
 from message_types.msg_waypoints import MsgWaypoints_SFC
+from viewers.planner_viewer import PlannerViewer
+from message_types.msg_world_map import MsgWorldMap
+import numpy as np
 
 
 class ViewManager:
 
     def __init__(self,
-                 mav: bool = False):
+                 mav: bool = False,
+                 planningFlag: bool = True):
         
         self.mav_flag = mav
+        self.planningFlag = planningFlag
+
+        #creates a Q widget application
+        self.app = pg.QtWidgets.QApplication([]) 
+
+
+        if self.planningFlag:
+
+            self.planner_viewer = PlannerViewer(app=self.app)
+
 
     def update_planning_tree(self,
-                             waypoints: MsgWaypoints_SFC):
+                             waypoints: MsgWaypoints_SFC,
+                             waypoints_not_smooth: MsgWaypoints_SFC,
+                             tree: MsgWaypoints_SFC,
+                             world_map: MsgWorldMap,
+                             optimizedControlPoints: np.ndarray):
         
 
-        
+        self.planner_viewer.draw_tree_and_map(worldMap=world_map,
+                                              tree=tree,
+                                              waypoints=waypoints,
+                                              waypoints_not_smooth=waypoints_not_smooth,
+                                              optimizedControlPoints=optimizedControlPoints)

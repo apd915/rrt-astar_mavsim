@@ -90,7 +90,7 @@ class MsgWorldMap:
             self.obstacleList_2D.append(tempNorthList)
         
     #gets the lists of the 2D obstacles
-    def get_2D_obstacles(self):
+    def get_2D_obstacles(self)->list[list[RectangularObstacle]]:
         return self.obstacleList_2D
 
 
@@ -139,8 +139,20 @@ class MsgWorldMap:
             self.obstacleList_3D.append(tempNorthList)
 
 
-    def get_3D_obstacles(self):
+    def get_3D_obstacles(self)->list[list[list[RectangularObstacle]]]:
         return self.obstacleList_3D
 
 
 
+    def getConvexHullsList(self):
+        convexHullsList = []
+
+        #case 2 dimensions
+        if self.numDimensions == 2:
+            
+            #gets the vertices list
+            for NorthList in self.obstacleList_2D:
+                for tempObject in NorthList:
+
+
+                    pass

@@ -28,6 +28,9 @@ minObstacleWidth = 20.0
 maxObstacleWidthRatio = 0.9
 minObstacleWidthRatio = 0.1
 
+#sets the scale
+scale = 2500
+
 
 #creates the operational altitude for the 2D planar planning algorithm
 altitude = 100.0
