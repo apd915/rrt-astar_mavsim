@@ -1,8 +1,7 @@
 import numpy as np
 import parameters.flightCorridor_parameters as FLPARAM
 from shapely.geometry import MultiPoint
-
-from eVTOL_BSplines.submodules.path_generator.path_generation.safe_flight_corridor import SFC, SFC_Data
+from tools.safeFlightCorridor import SFC
 from tools.rotations import euler_to_rotation, euler_to_rotation_2D
 
 
@@ -33,8 +32,9 @@ class MsgFlightCorridor:
         self.endExtension = endExtension
 
 
+
     #gets the sfc
-    def getSFC(self):
+    def generateSFC(self)->SFC:
         
         #calls the the function to get the respective sfc
         if self.numDimensions == 2:
@@ -45,6 +45,15 @@ class MsgFlightCorridor:
 
         #now, we return the temp SFC
         return tempSFC
+    
+    def getAbMatrices(self):
+        #gets the temp SFC
+        tempSFC = self.generateSFC()
+
+        #gets the A and b
+        A_temp, b_temp = tempSFC.getAbMatrices()
+
+        return A_temp, b_temp
 
     def __getSFC_2d(self):
         #gets the center vector (vector from primary pivot position to secondary pivot Position)
@@ -157,15 +166,4 @@ class MsgFlightCorridor:
         return self.numDimensions
        
 
-
-    def getConvexHull(self)->MultiPoint.convex_hull:
-
-        #gets the normals and vertices
-        tempSFC = self.getSFC()
-
-        #gets the normals and vertices listt
-        normalsList, verticesList = tempSFC.getNormalsVertices()
-
-
-        pass
 

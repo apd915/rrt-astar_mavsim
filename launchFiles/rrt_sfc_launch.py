@@ -14,7 +14,7 @@ import parameters.flightCorridor_parameters as FLIGHT_PLAN
 
 
 #sets the number of dimensions right here
-numDimensions = 3
+numDimensions = 2
 
 
 
@@ -23,7 +23,7 @@ viewerManager = ViewManager(mav=False,
 
 
 worldMap = MsgWorldMap(obstacleFieldType='rectangular',
-                       numDimensions = 2,
+                       numDimensions = numDimensions,
                        fieldWidth=2000.0,
                        obstacleWidthRatio=0.5,
                        obstacleWidth_sigma=1.0,

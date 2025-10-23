@@ -2,6 +2,7 @@ import numpy as np
 import parameters.planner_parameters as PLAN
 from shapely.geometry import MultiPoint
 from tools.obstacles import RectangularObstacle
+import time
 
 
 #creates the set of possible obstalcle types
@@ -44,15 +45,19 @@ class MsgWorldMap:
 
 
         #case this is a 2 dimensional obstacle
+        self.init_map()
+
+        #generates the A and b matrices list
+        self.generateAbMatricesLists()
+
+
+
+    def init_map(self):
+        #calls the respective dimensionality to get the map
         if self.numDimensions == 2:
-
             self.init_2D_map()
-
         elif self.numDimensions == 3:
-
             self.init_3D_map()
-            potato = 0
-
     
     def init_2D_map(self):
 
@@ -142,37 +147,49 @@ class MsgWorldMap:
     def get_3D_obstacles(self)->list[list[list[RectangularObstacle]]]:
         return self.obstacleList_3D
 
+    #gets all of the obstacles objects
+    def get_obstacles(self)->(list[list[RectangularObstacle]] | list[list[list[RectangularObstacle]]]):
+
+        if self.numDimensions == 2:
+            return self.get_2D_obstacles()
+        elif self.numDimensions == 3:
+            return self.get_3D_obstacles()
 
 
-    def getConvexHullsList(self):
-        convexHullsList = []
+    #gets all of the A and b matrices for each of the obstacles as a large list
+    def generateAbMatricesLists(self):
 
-        #case 2 dimensions
+        self.obstaclesList = self.get_obstacles()
+
+        self.Ab_list = []
+
         if self.numDimensions == 2:
 
-            tempList = self.get_2D_obstacles()
-            
-            #gets the vertices list
-            for NorthList in tempList:
-                for tempObject in NorthList:
+            #iterates over all the obstacles to get the A and b matrices
+            for northList in self.obstaclesList:
+                for tempObstacle in northList:
                     
-                    #gets the vertices
-                    tempVertices = tempObject.getVertices_building_2D_list()
+                    #gets the SFC from the temp Obstacle
+                    obstacleSFCTemp = tempObstacle.getSFC()
+                    #gets the A and b matrices
+                    A_temp, b_temp = obstacleSFCTemp.getAbMatrices()
+                    #appends to the north Ab list
+                    self.Ab_list.append([A_temp, b_temp])
 
-                    tempConvexHull = MultiPoint(tempVertices).convex_hull
-                    convexHullsList.append(tempConvexHull)
+                    potato = 0
+                
+        if self.numDimensions == 3:
 
-        elif self.numDimensions == 3:
+            for northList in self.obstaclesList:
+                for eastList in northList:
+                    for tempObstacle in eastList:
 
-            tempList = self.get_3D_obstacles()
+                        #gets the SFC from the temp obstacle
+                        obstacleSFCTemp = tempObstacle.getSFC()
+                        A_temp, b_temp = obstacleSFCTemp.getAbMatrices()
 
-            for NorthList in tempList:
-                for eastList in NorthList:
-                    for tempObject in eastList:
+                        self.Ab_list.append([A_temp, b_temp])
 
-                        tempVertices = tempObject.getVertices_obstacle_3D_list()
 
-                        tempConvexHull = MultiPoint(tempVertices).convex_hull
-                        convexHullsList.append(tempConvexHull)
-
-        return convexHullsList
+    def getAbMatricesLists(self):
+        return self.Ab_list

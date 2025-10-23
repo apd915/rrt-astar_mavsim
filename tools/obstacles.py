@@ -1,6 +1,7 @@
 #creates the class to create obstacles
 import numpy as np
 import parameters.planner_parameters as PLAN
+from tools.safeFlightCorridor import SFC
 
 
 
@@ -26,6 +27,10 @@ class RectangularObstacle:
 
         self.building_height = building_height
 
+        self.SFC = SFC(dimensions=self.dimensions_obs,
+                       translation=self.translation_obs,
+                       rotation=self.rotation_obsToWorld)
+
         #that is, the number of dimensions specified in the obstacle input
         self.numDimensions = np.size(self.dimensions_obs)
 
@@ -36,7 +41,7 @@ class RectangularObstacle:
         else:
             raise ValueError("invalid number of dimensions")
     
-        tomato = 0
+
 
 
     #creates the init function for the size 2 maps
@@ -184,3 +189,8 @@ class RectangularObstacle:
         maxBounds = self.translation_obs + self.dimensions_obs/2.0
         #returns the min and max bounds in that order
         return minBounds, maxBounds
+    
+
+
+    def getSFC(self):
+        return self.SFC

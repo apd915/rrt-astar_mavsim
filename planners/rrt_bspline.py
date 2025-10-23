@@ -7,6 +7,9 @@ from message_types.msg_waypoints import MsgWaypoints_SFC
 from message_types.msg_flight_corridors import MsgFlightCorridor
 import parameters.planner_parameters as PLAN
 import random
+import time
+import scipy as sp
+from tools.intersections import intersectionOccurred
 
 
 #creates the RRT B-Spline class
@@ -87,12 +90,15 @@ class RRTBSpline:
             #candidate sfc
             sfc_candidate = MsgFlightCorridor(primaryPosition=parentPosition,
                                               secondaryPosition=newPosition_candidate,
-                                              primaryPosition_index=minCostParentIndex)
+                                              primaryPosition_index=minCostParentIndex,
+                                              numDimensions=self.numDimensions)
 
             #calls the function to check for intersection
+            intersectionstart = time.time()
             intesectionDetect = intersectionDetected(corridor=sfc_candidate,
                                                      world_map=worldMap)
-
+            intersectionend = time.time()
+            intersectionTime = intersectionend - intersectionstart
             pass
     
 
@@ -221,11 +227,34 @@ def intersectionDetected(corridor: MsgFlightCorridor,
                          world_map: MsgWorldMap):
     
 
-    #gets the corridor convex Hull
+    #gets the map obstacles list
+    map_A_b_lists = world_map.getAbMatricesLists()
+
+    #gets the corridor A and b matrices
+    A_corridor, b_corridor = corridor.getAbMatrices()
     
-    #gets the convex hulls list of the world map
-    map_convex_hulls = world_map.getConvexHullsList()
+    intersection = False
+
+    #iterates over all of the A b matrices
+    for AbMatrices in map_A_b_lists:
+
+        tempObstacleA = AbMatrices[0]
+        tempObstacle_b = AbMatrices[1]
+
+        #with the obstacle A and b, we check for intersection
+        tempObstacleIntersectionOccurred = intersectionOccurred(A1=A_corridor,
+                                                                b1=b_corridor,
+                                                                A2=tempObstacleA,
+                                                                b2=tempObstacle_b)
+        
+        intersection = intersection and tempObstacleIntersectionOccurred
+
+        #if we find an intersection, then we return true
+        if intersection:
+            return intersection
+        
 
 
-    #gets the corridor convex hulls
-    corridor_convex_hull = corridor.getConvexHull()
+    #if we don't find an intersection, we return false
+    return intersection
+    
