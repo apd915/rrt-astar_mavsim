@@ -2,13 +2,56 @@
 
 import numpy as np
 from scipy.optimize import linprog
+from message_types.msg_flight_corridors import MsgFlightCorridor
+from message_types.msg_world_map import MsgWorldMap
+
+
+
+#defines the function to get the intersection with the sfc candidate and the world map
+def intersectionDetected(corridor: MsgFlightCorridor,
+                         world_map: MsgWorldMap):
+    
+
+    #gets the map obstacles list
+    map_A_b_lists = world_map.getAbMatricesLists()
+
+    #gets the corridor A and b matrices
+    A_corridor, b_corridor = corridor.getAbMatrices()
+    
+    intersection = False
+
+    #iterates over all of the A b matrices
+    for AbMatrices in map_A_b_lists:
+
+        tempObstacleA = AbMatrices[0]
+        tempObstacle_b = AbMatrices[1]
+
+        #with the obstacle A and b, we check for intersection
+        tempObstacleIntersectionOccurred = intersectionOccurred_Matrix(A1=A_corridor,
+                                                                b1=b_corridor,
+                                                                A2=tempObstacleA,
+                                                                b2=tempObstacle_b)
+        
+        intersection = intersection and tempObstacleIntersectionOccurred
+
+        #if we find an intersection, then we return true
+        if intersection:
+            return intersection
+        
+
+
+    #if we don't find an intersection, we return false
+    return intersection
+
+
+
 
 #Arguments:
 #A1: the A matrix for object 1
 #b1: the b vector for object 1
 #A2: the A matrix for object 2
 #b2: the b vector for object 2
-def intersectionOccurred(A1: np.ndarray,
+def intersectionOccurred_Matrix(A1: np.ndarray,
                          b1: np.ndarray,
                          A2: np.ndarray,
                          b2: np.ndarray):
