@@ -37,15 +37,18 @@ pathGenerator = RRTBSpline(numDimensions=numDimensions,
                            step_length=FLIGHT_PLAN.segmentLength,
                            numDesiredInitPaths=FLIGHT_PLAN.numInitialPaths)
 
+#gets the center positions of the world map
+centerPositions = worldMap.getCenterPositionsList()
 
 
+'''
 #calls the function to generate the paths
 pathGenerator.generatePaths(worldMap=worldMap,
                             startPosition=FLIGHT_PLAN.initialPosition,
                             endPosition=FLIGHT_PLAN.finalPosition,
                             segmentLength=FLIGHT_PLAN.segmentLength,
                             altitude=PLAN.altitude)
-
+#'''
 
 
 viewerManager.update_planning_tree(waypoints=None,

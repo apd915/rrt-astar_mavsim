@@ -58,7 +58,30 @@ class DrawMap:
                         fullMesh = np.concatenate((fullMesh, currentMeshes), axis=0)
                         fullMeshColors = np.concatenate((fullMeshColors, currentColors), axis=0)
 
-            pass
+
+        '''
+        tempVertices_0 = [np.array([[100.],[100.],[100.]]),
+                        np.array([[-100.],[100.],[100.]]),
+                        np.array([[-100.],[-100.],[100.]]),
+                        np.array([[100.],[-100.],[100.]]),
+                        np.array([[100.],[100.],[-100.]]),
+                        np.array([[-100.],[100.],[-100.]]),
+                        np.array([[-100.],[-100.],[-100.]]),
+                        np.array([[100.],[-100.],[-100.]])]
+        
+        tempVertices = []
+
+        for tempVertex_0 in tempVertices_0:
+
+            tempVertex = tempVertex_0 + np.array([[0.0],[0.0],[500.0]])
+            tempVertices.append(tempVertex)
+
+        
+        tempMeshes, tempColors = self.building_vert_face(vertices=tempVertices)
+
+        fullMesh = np.concatenate((fullMesh, tempMeshes), axis=0)
+        fullMeshColors = np.concatenate((fullMeshColors, tempColors), axis=0)
+        #'''
 
         self.ground_mesh = gl.GLMeshItem(
             vertexes=fullMesh,  # defines the triangular mesh (Nx3x3)

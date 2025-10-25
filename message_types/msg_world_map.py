@@ -66,6 +66,9 @@ class MsgWorldMap:
 
         #creates the list of lists of obstacles
         self.obstacleList_2D = []
+
+        #lists of center positions
+        self.obstaclePositions_2D = []
         
         #iterates over the north positions
         for i in range(self.numBlocks):
@@ -92,6 +95,8 @@ class MsgWorldMap:
                                                        building_height=tempBuildingHeight)
                     tempNorthList.append(tempObstacle)
 
+                    self.obstaclePositions_2D.append(tempObstacle.getTranslationWorld())
+
             self.obstacleList_2D.append(tempNorthList)
         
     #gets the lists of the 2D obstacles
@@ -102,6 +107,8 @@ class MsgWorldMap:
     def init_3D_map(self):
 
         self.obstacleList_3D = []
+
+        self.obstaclePositions_3D = []
         
         for i in range(self.numBlocks):
 
@@ -137,6 +144,9 @@ class MsgWorldMap:
                         tempObstacle = RectangularObstacle(dimensions_obs=tempDimensions,
                                                            translation_obs=currentPosition,
                                                            rotation_obsToWorld=np.eye(3))
+                        
+                        tempObstaclePosition = tempObstacle.getTranslationWorld()
+                        self.obstaclePositions_3D.append(tempObstaclePosition)
                         
                     
                     tempEastList.append(tempObstacle)
@@ -193,3 +203,11 @@ class MsgWorldMap:
 
     def getAbMatricesLists(self):
         return self.Ab_list
+    
+
+    def getCenterPositionsList(self):
+
+        if self.numDimensions == 2:
+            return self.obstaclePositions_2D
+        elif self.numDimensions == 3:
+            return self.obstaclePositions_3D

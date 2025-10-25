@@ -25,6 +25,10 @@ class RectangularObstacle:
         self.translation_obs = translation_obs
         self.rotation_obsToWorld = rotation_obsToWorld
 
+
+        #gets the translation in the world frame
+        self.translation_world = self.rotation_obsToWorld @ self.translation_obs
+
         self.building_height = building_height
 
         self.SFC = SFC(dimensions=self.dimensions_obs,
@@ -194,3 +198,8 @@ class RectangularObstacle:
 
     def getSFC(self):
         return self.SFC
+    
+
+    #defines the function to get the translation in the world frame
+    def getTranslationWorld(self):
+        return self.translation_world
