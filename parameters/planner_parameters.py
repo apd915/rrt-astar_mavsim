@@ -18,9 +18,9 @@ R_min = Va0**2. / MAV.gravity / np.tan(phi_max)
 
 # create random city map
 city_width      = 2000.  # the city is of size (width)x(width)
-building_height_max = 300.0   # maximum height of buildings
+building_height_max = 700.0   # maximum height of buildings
 building_height_min = 20.0
-num_blocks      = 4    # number of blocks in city
+num_blocks      = 5    # number of blocks in city
 street_width    = .8   # percent of block that is street.
 obstacleWidthRatio = 0.3
 obstacleWidth_sigma = 20.0
@@ -33,7 +33,7 @@ scale = 2500
 
 
 #creates the operational altitude for the 2D planar planning algorithm
-altitude = 100.0
+altitude = 300.0
 
 
 #defines the list of edges between vertices here

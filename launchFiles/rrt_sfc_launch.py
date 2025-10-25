@@ -28,7 +28,7 @@ worldMap = MsgWorldMap(obstacleFieldType='rectangular',
                        obstacleWidthRatio=0.5,
                        obstacleWidth_sigma=1.0,
                        altitude=100.0,
-                       numBlocks=4)
+                       numBlocks=5)
 
 pathGenerator = RRTBSpline(numDimensions=numDimensions,
                            M=FLIGHT_PLAN.M,

@@ -1,15 +1,19 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Python: Debug",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/launchFiles/rrt_sfc_launch.py",  // or your main entrypoint
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/eVTOL_BSplines:${workspaceFolder}/eVTOL_BSplines/path_generator"
-      },
-      "justMyCode": false
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Launch RRT MAVSim (PyQt Safe)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/launchFiles/rrt_sfc_launch.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/eVTOL_BSplines:${workspaceFolder}/eVTOL_BSplines/path_generator",
+                "PYQTGRAPH_QT_LIB": "PyQt5"
+            },
+            "python": "/home/benjamin/vvv/bin/python",
+            "subProcess": false
+        }
+    ]
 }
