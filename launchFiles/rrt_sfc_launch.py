@@ -44,8 +44,6 @@ centerPositions = worldMap.getCenterPositionsList()
 #calls the function to generate the paths
 waypointsNotSmooth =\
  pathGenerator.generatePaths(worldMap=worldMap,
-                            startPosition=FLIGHT_PLAN.initialPosition,
-                            endPosition=FLIGHT_PLAN.finalPosition,
                             segmentLength=FLIGHT_PLAN.segmentLength,
                             altitude=PLAN.altitude)
 #'''

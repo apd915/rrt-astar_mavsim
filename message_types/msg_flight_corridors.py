@@ -32,30 +32,39 @@ class MsgFlightCorridor:
         self.endExtension = endExtension
 
 
+        #case this is a 2D flight corridor, we want to extract the altitude, from the primary position
+        if numDimensions == 2:
+            self.altitude = primaryPosition.item(2)
+
+
+        #generates the SFC for this
+        self.sfc = self.__generateSFC()
+
+
 
     #gets the sfc
-    def generateSFC(self)->SFC:
+    def __generateSFC(self)->SFC:
         
         #calls the the function to get the respective sfc
         if self.numDimensions == 2:
             #
-            tempSFC = self.__getSFC_2d()
+            tempSFC = self.__generateSFC_2d()
         elif self.numDimensions == 3:
-            tempSFC = self.__getSFC_3d()
+            tempSFC = self.__generateSFC_3d()
 
         #now, we return the temp SFC
         return tempSFC
     
     def getAbMatrices(self):
         #gets the temp SFC
-        tempSFC = self.generateSFC()
+        tempSFC = self.__generateSFC()
 
         #gets the A and b
         A_temp, b_temp = tempSFC.getAbMatrices()
 
         return A_temp, b_temp
 
-    def __getSFC_2d(self):
+    def __generateSFC_2d(self):
         #gets the center vector (vector from primary pivot position to secondary pivot Position)
         self.centerVector = self.secondaryPosition - self.primaryPosition
 
@@ -99,7 +108,7 @@ class MsgFlightCorridor:
         
         return tempSFC
 
-    def __getSFC_3d(self):
+    def __generateSFC_3d(self):
 
         #gets the center vector (vector from primary pivot position to secondary pivot Position)
         self.centerVector = self.secondaryPosition - self.primaryPosition
@@ -164,6 +173,42 @@ class MsgFlightCorridor:
     
     def getNumDimensions(self):
         return self.numDimensions
-       
+    
+    #gets the already pregenerated sfc
+    def getSFC(self)->SFC:
+        return self.sfc
+    
 
 
+    #from the safe Flight Corridor Message, we get the vertices of the SFC, taking into account the altitude
+    def getVertices(self):
+
+        if self.numDimensions == 2:
+
+            return self.__getVertices_2D()
+        
+        elif self.numDimensions == 3:
+
+            return self.__getVertices_3D()
+
+    
+
+    def __getVertices_2D(self):
+
+        #gets the vertices from the sfc
+        sfc_normals, sfc_vertices = self.sfc.getNormalsVertices()
+
+        vertices_out = []
+
+        for vertex_temp in sfc_vertices:
+
+            vertex_out_temp = np.concatenate((vertex_temp, np.array([[self.altitude]])), axis=0)
+
+            #appends to the vertices out
+            vertices_out.append(vertex_out_temp)
+
+        return vertices_out
+
+    def __getVertices_3D(self):
+
+        pass

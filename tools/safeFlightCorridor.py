@@ -63,10 +63,10 @@ class SFC:
 
         if self.numDimensions == 2:
 
-            normalsList, verticesList = self.getNormalsVertices_2d()
+            normalsList, verticesList = self.__getNormalsVertices_2d()
 
         elif self.numDimensions == 3:
-            normalsList, verticesList = self.getNormalsVertices_3d()
+            normalsList, verticesList = self.__getNormalsVertices_3d()
 
         return normalsList, verticesList
 
@@ -74,7 +74,7 @@ class SFC:
     #gets the normal vectors with each corresponding vertex.
     #IMPORTANT NUANCE: Normal vectors are pointing OUTWARD from the convex hull
     #this makes it easier to use the less than or equal operator than 
-    def getNormalsVertices_2d(self):
+    def __getNormalsVertices_2d(self):
         
         #gets the x dimension
         x_dimension = self.dimensions[0,0]
@@ -147,7 +147,7 @@ class SFC:
 
 
     #does the same thing for the 3-Dimensional case
-    def getNormalsVertices_3d(self):
+    def __getNormalsVertices_3d(self):
         #gets the size of the x dimension
         x_dimension = self.dimensions[0,0]
         #gets the size of the y dimensions

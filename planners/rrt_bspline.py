@@ -41,18 +41,15 @@ class RRTBSpline:
     #creates the update function
     def generatePaths(self,
                       worldMap: MsgWorldMap,
-                      startPosition: np.ndarray,
-                      endPosition: np.ndarray,
                       segmentLength: float,
                       altitude: float):
         
-        self.startPosition = startPosition
-        self.endPosition = endPosition
-
         if self.numDimensions == 2:
+            self.startPosition = FLIGHT_PLAN.initialPosition_2D
             self.endPosition = FLIGHT_PLAN.finalPosition_2D
         elif self.numDimensions == 3:
-            self.endPosition = FLIGHT_PLAN.finalPosition
+            self.startPosition = FLIGHT_PLAN.initialPosition_3D
+            self.endPosition = FLIGHT_PLAN.finalPosition_3D
 
         self.segmentLength = segmentLength
 

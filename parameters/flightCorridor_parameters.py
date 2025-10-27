@@ -7,7 +7,7 @@ startExtension = 30.0
 endExtension = 30.0
 
 #sets the initial segment length
-segmentLength = 400.0
+segmentLength = 700.0
 
 #sets the rho variable
 rho = np.array([[1.0],[1.0],[1.0]])
@@ -25,12 +25,15 @@ numPoints_perUnit = (degree + M)/segmentLength
 #number of initial paths
 numInitialPaths = 1
 
-#sets the initial start and end positions
-initialPosition = np.array([[0.0],[0.0],[0.0]])
-finalPosition = np.array([[PLAN.city_width],[PLAN.city_width],[-PLAN.city_width]])
+#the initial and final positions for the 2D and 3D cases.
+initialPosition_2D = np.array([[0.0],[0.0],[-PLAN.altitude]])
 finalPosition_2D = np.array([[PLAN.city_width],[PLAN.city_width],[-PLAN.altitude]])
 
+initialPosition_3D = np.array([[0.0],[0.0],[0.0]])
+finalPosition_3D = np.array([[PLAN.city_width],[PLAN.city_width],[-PLAN.city_width]])
+
+
 #sets the width of the SFC
-width = 50.0
+width = 150.0
 #sets the height of the SFC
-height = 50.0
+height = 150.0
