@@ -27,7 +27,6 @@ worldMap = MsgWorldMap(obstacleFieldType='rectangular',
                        fieldWidth=2000.0,
                        obstacleWidthRatio=0.5,
                        obstacleWidth_sigma=1.0,
-                       altitude=100.0,
                        numBlocks=5)
 
 pathGenerator = RRTBSpline(numDimensions=numDimensions,
@@ -41,9 +40,10 @@ pathGenerator = RRTBSpline(numDimensions=numDimensions,
 centerPositions = worldMap.getCenterPositionsList()
 
 
-'''
+#'''
 #calls the function to generate the paths
-pathGenerator.generatePaths(worldMap=worldMap,
+waypointsNotSmooth =\
+ pathGenerator.generatePaths(worldMap=worldMap,
                             startPosition=FLIGHT_PLAN.initialPosition,
                             endPosition=FLIGHT_PLAN.finalPosition,
                             segmentLength=FLIGHT_PLAN.segmentLength,
@@ -51,7 +51,7 @@ pathGenerator.generatePaths(worldMap=worldMap,
 #'''
 
 
-viewerManager.update_planning_tree(waypoints=None,
+viewerManager.update_planning_tree(waypoints=waypointsNotSmooth,
                                    waypoints_not_smooth=None,
                                    tree=None,
                                    world_map=worldMap,

@@ -7,6 +7,7 @@ from message_types.msg_waypoints import MsgWaypoints_SFC
 from viewers.draw_map import DrawMap
 import pyqtgraph as pg
 import parameters.planner_parameters as PLAN
+from viewers.draw_waypoints import DrawWaypoints
 
 
 class PlannerViewer:
@@ -47,3 +48,7 @@ class PlannerViewer:
         
         DrawMap(map=worldMap,
                 window=self.window)
+        
+        #draws the waypoints out
+        DrawWaypoints(waypoints=waypoints,
+                      window=self.window)

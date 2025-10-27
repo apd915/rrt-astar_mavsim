@@ -6,10 +6,12 @@ from message_types.msg_world_map import MsgWorldMap
 from message_types.msg_waypoints import MsgWaypoints_SFC
 from message_types.msg_flight_corridors import MsgFlightCorridor
 import parameters.planner_parameters as PLAN
+import parameters.flightCorridor_parameters as FLIGHT_PLAN
 import random
 import time
 import scipy as sp
 from tools.intersections import intersectionOccurred_Matrix, intersectionDetected
+from tools.pathOptimization import findMinimumPath
 import heapq
 
 
@@ -47,6 +49,11 @@ class RRTBSpline:
         self.startPosition = startPosition
         self.endPosition = endPosition
 
+        if self.numDimensions == 2:
+            self.endPosition = FLIGHT_PLAN.finalPosition_2D
+        elif self.numDimensions == 3:
+            self.endPosition = FLIGHT_PLAN.finalPosition
+
         self.segmentLength = segmentLength
 
         self.tree = MsgWaypoints_SFC(numDimensions=self.numDimensions)
@@ -66,6 +73,13 @@ class RRTBSpline:
                                                         altitude=altitude)
 
             currentNumPaths_found += foundNewPathFlag
+
+
+        #gets the waypoints not smooth from the list
+        self.waypoints_not_smooth = findMinimumPath(tree=self.tree,
+                                                    endPosition=self.endPosition)
+        
+        return self.waypoints_not_smooth
 
 
     

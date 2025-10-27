@@ -50,7 +50,7 @@ def findMinimumPath(tree: MsgWaypoints_SFC,
 
 
     #now with this waypoint list, we get the min path waypoints
-    minPathWaypoints = MsgWaypoints_SFC()
+    minPathWaypoints = MsgWaypoints_SFC(numDimensions=tree.numDimensions)
 
     for i, newPathIndex in enumerate(path):
         

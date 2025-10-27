@@ -28,6 +28,7 @@ numInitialPaths = 1
 #sets the initial start and end positions
 initialPosition = np.array([[0.0],[0.0],[0.0]])
 finalPosition = np.array([[PLAN.city_width],[PLAN.city_width],[-PLAN.city_width]])
+finalPosition_2D = np.array([[PLAN.city_width],[PLAN.city_width],[-PLAN.altitude]])
 
 #sets the width of the SFC
 width = 50.0
