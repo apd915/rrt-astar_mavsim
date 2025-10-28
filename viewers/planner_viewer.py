@@ -7,7 +7,9 @@ from message_types.msg_waypoints import MsgWaypoints_SFC
 from viewers.draw_map import DrawMap
 import pyqtgraph as pg
 import parameters.planner_parameters as PLAN
+import parameters.flightCorridor_parameters as FLIGHT_PLAN
 from viewers.draw_waypoints import DrawWaypoints
+from viewers.drawEndPoints import DrawEndMarker
 
 
 class PlannerViewer:
@@ -51,4 +53,12 @@ class PlannerViewer:
         
         #draws the waypoints out
         DrawWaypoints(waypoints=waypoints,
+                      window=self.window)
+        
+        DrawEndMarker(position=np.array([[0.0],[0.0],[1000.0]]),
+                      scale=100.0,
+                      window=self.window)
+        
+        DrawEndMarker(position=np.array([[PLAN.city_width],[PLAN.city_width],[1000.0]]),
+                      scale=100.0,
                       window=self.window)

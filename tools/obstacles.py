@@ -188,9 +188,9 @@ class RectangularObstacle:
     def getBounds_obstacleFrame(self):
 
         #gets the min mound
-        minBounds = self.translation_obs - self.dimensions_obs/2.0
+        minBounds = -self.dimensions_obs/2.0
         #and the maximum bounds
-        maxBounds = self.translation_obs + self.dimensions_obs/2.0
+        maxBounds = self.dimensions_obs/2.0
         #returns the min and max bounds in that order
         return minBounds, maxBounds
     

@@ -26,14 +26,24 @@ class DrawEndMarker:
         self.scale = scale
 
 
-        scaledPoints = points*self.scale
+        outputPoints = []
 
-        shiftedPoints = scaledPoints + self.scale
+        for point in points:
+            scaledPoint = point*self.scale
+            shiftedPoint = scaledPoint + position
+
+            outputPoints.append(shiftedPoint)
 
         #gets the meshes and mesh colors
-        self.meshes, self.meshColors = self.building_vert_face(vertices=shiftedPoints)
+        self.meshes, self.meshColors = self.building_vert_face(vertices=outputPoints)
 
-        self.
+        self.markerMesh = gl.GLMeshItem(vertexes=self.meshes,
+                                        vertexColors=self.meshColors,
+                                        drawEdges=True,
+                                        smooth=False,
+                                        computeNormals=False)
+        self.markerMesh.setGLOptions('translucent')
+        self.window.addItem(self.markerMesh)
 
 
 
@@ -69,17 +79,17 @@ class DrawEndMarker:
         yellow = np.array([1., 1., 0., 1])
 
         meshColors = np.empty((12, 3, 4), dtype=np.float32)
-        meshColors[0] = green
-        meshColors[1] = green
-        meshColors[2] = green
-        meshColors[3] = green
-        meshColors[4] = green
-        meshColors[5] = green
-        meshColors[6] = green
-        meshColors[7] = green
-        meshColors[8] = yellow
-        meshColors[9] = yellow
-        meshColors[10] = yellow
-        meshColors[11] = yellow
+        meshColors[0] = blue
+        meshColors[1] = blue
+        meshColors[2] = blue
+        meshColors[3] = blue
+        meshColors[4] = blue
+        meshColors[5] = blue
+        meshColors[6] = blue
+        meshColors[7] = blue
+        meshColors[8] = red
+        meshColors[9] = red
+        meshColors[10] = red
+        meshColors[11] = red
 
         return meshes, meshColors

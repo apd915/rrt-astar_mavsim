@@ -32,16 +32,14 @@ def intersectionDetected(corridor: MsgFlightCorridor,
                                                                 A2=tempObstacleA,
                                                                 b2=tempObstacle_b)
         
-        intersection = intersection and tempObstacleIntersectionOccurred
-
         #if we find an intersection, then we return true
-        if intersection:
-            return intersection
+        if tempObstacleIntersectionOccurred:
+            return True
         
 
 
     #if we don't find an intersection, we return false
-    return intersection
+    return False
 
 
 

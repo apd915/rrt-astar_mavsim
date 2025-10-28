@@ -25,7 +25,7 @@ viewerManager = ViewManager(mav=False,
 worldMap = MsgWorldMap(obstacleFieldType='rectangular',
                        numDimensions = numDimensions,
                        fieldWidth=2000.0,
-                       obstacleWidthRatio=0.5,
+                       obstacleWidthRatio=0.3,
                        obstacleWidth_sigma=1.0,
                        numBlocks=5)
 

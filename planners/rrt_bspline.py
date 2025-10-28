@@ -89,6 +89,8 @@ class RRTBSpline:
         minDistanceToEnd = np.inf
         minDistanceIndex = 0
 
+        intersectionHappened_list = []
+
         while connectedToEnd is False:
 
             #generates a new point. we are experimenting with the growth method
@@ -108,6 +110,8 @@ class RRTBSpline:
             #calls the function to check for intersection
             intersectionHappened = intersectionDetected(corridor=sfc_candidate,
                                                      world_map=worldMap)
+            
+            intersectionHappened_list.append(intersectionHappened)
 
             #if no intersection happened, add the canditdate to the tree
             if intersectionHappened is False:
@@ -142,6 +146,7 @@ class RRTBSpline:
                     #calls the function to check for an intersection
                     intersectionHappened_end = intersectionDetected(corridor=sfc_candidate_newToEnd,
                                                                     world_map=worldMap)
+                    intersectionHappened_list.append(intersectionHappened_end)
                     
 
                     if intersectionHappened_end is False:
