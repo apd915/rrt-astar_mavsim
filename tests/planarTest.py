@@ -30,32 +30,43 @@ n_plane_norm = plane_n_vec / np.linalg.norm(plane_n_vec)
 #sets the position
 p_0 = np.array([[200.0],[200.0],[-200.0]])
 
+p_0_norm = p_0 / np.linalg.norm(p_0)
 
-n_plane_norm_neg = n_plane_norm * -1.0
+#gets the SFC of the N plane norm
+U, S, Vt = np.linalg.svd(p_0_norm.T)
 
+Vt_0 = Vt[:,0:1]
+Vt_1 = Vt[:,1:2]
+Vt_2 = Vt[:,2:3]
 
-#gets the two b values
-b_0 = n_plane_norm.T @ p_0
-b_1 = n_plane_norm_neg.T @ p_0
-
-
-#creates the new A matrix
-A_1_new = np.concatenate((obs_1_A, n_plane_norm.T, n_plane_norm_neg.T), axis=0)
-b_1_new = np.concatenate((obs_1_b, b_0, b_1), axis=0)
+crossProduct = np.cross(Vt_1.flatten(), Vt_2.flatten())
 
 
-A_2_new = np.concatenate((obs_2_A, n_plane_norm.T, n_plane_norm_neg.T), axis=0)
-b_2_new = np.concatenate((obs_2_b, b_0, b_1), axis=0)
+#creates the U matrix
+Proj = Vt[:,0:2]
 
 
-c = np.ones(numDimensions)
+#creates the new A and b vectors
+A_1_new = obs_1_A @ Proj
+
+b_1_new = obs_1_b - obs_1_A @ p_0
+
+A_2_new = obs_2_A @ Proj
+
+b_2_new = obs_2_b - obs_2_A @ p_0
+
+
+#sees if these are feasible
+c = np.ones(numDimensions-1)
 
 result_1 = linprog(c, A_ub=A_1_new, b_ub=b_1_new, method='highs')
-result_1_success = result_1.success
+
+result_1_status = result_1.success
 
 
 result_2 = linprog(c, A_ub=A_2_new, b_ub=b_2_new, method='highs')
-result_2_success = result_2.success
+
+result_2_status = result_2.success
 
 #let's see of this 
 
