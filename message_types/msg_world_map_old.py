@@ -182,7 +182,7 @@ class MsgWorldMap:
                     #gets the SFC from the temp Obstacle
                     obstacleSFCTemp = tempObstacle.getSFC()
                     #gets the A and b matrices
-                    A_temp, b_temp = obstacleSFCTemp.getAbMatrices()
+                    A_temp, b_temp = obstacleSFCTemp.generateAbMatrices()
                     #appends to the north Ab list
                     self.Ab_list.append([A_temp, b_temp])
 

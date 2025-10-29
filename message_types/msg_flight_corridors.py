@@ -60,7 +60,7 @@ class MsgFlightCorridor:
         tempSFC = self.__generateSFC()
 
         #gets the A and b
-        A_temp, b_temp = tempSFC.getAbMatrices()
+        A_temp, b_temp = tempSFC.generateAbMatrices()
 
         return A_temp, b_temp
 

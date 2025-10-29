@@ -31,6 +31,8 @@ class SFC:
 
         self.numDimensions = np.size(self.dimensions)
 
+        self.generateAbMatrices()
+
 
     def getRotatedBounds(self):
         max_bounds = self.translation + self.dimensions/2.0
@@ -40,7 +42,7 @@ class SFC:
 
 
     #function to get the A and b matrices
-    def getAbMatrices(self):
+    def generateAbMatrices(self):
 
         normals, vertices = self.getNormalsVertices()
 
@@ -57,6 +59,9 @@ class SFC:
             b_value = normal.T @ vertex
             self.b = np.concatenate((self.b, b_value), axis=0)
 
+    
+
+    def getAbMatrices(self):
         return self.A, self.b
 
     def getNormalsVertices(self):
