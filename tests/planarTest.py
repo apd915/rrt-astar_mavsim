@@ -12,12 +12,12 @@ numDimensions = 3
 worldMap = MsgWorldMap(obstacleFieldType='rectangular',
                        numDimensions=numDimensions)
 
-obs_1_Ab = worldMap.Ab_list[0]
+obs_1_Ab = worldMap.Ab_3D_list[0]
 
 obs_1_A = obs_1_Ab[0]
 obs_1_b = obs_1_Ab[1]
 
-obs_2_Ab = worldMap.Ab_list[-1]
+obs_2_Ab = worldMap.Ab_3D_list[-1]
 
 obs_2_A = obs_2_Ab[0]
 obs_2_b = obs_2_Ab[1]

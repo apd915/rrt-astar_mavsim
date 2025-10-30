@@ -8,7 +8,7 @@ sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
 import numpy as np
 from message_types.msg_world_map import MsgWorldMap
 from viewers.view_manager import ViewManager
-from planners.rrt_bspline import RRTBSpline
+from planners.rrt_sfc_bspline import RRTBSpline
 import parameters.planner_parameters as PLAN
 import parameters.flightCorridor_parameters as FLIGHT_PLAN
 

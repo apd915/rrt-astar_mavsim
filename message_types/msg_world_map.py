@@ -2,9 +2,23 @@ import numpy as np
 import parameters.planner_parameters as PLAN
 import parameters.planarVTOL_map_parameters as PLANAR_PARAM
 from tools.obstacles import RectangularObstacle
+from scipy.optimize import linprog
 import time
 from enum import Enum
 from tools.getEulerUnit import getRotFromUnitVec
+
+#sets the e1, e2, and e3 vectors
+e1 = np.array([[1.0],[0.0],[0.0]])
+e2 = np.array([[0.0],[1.0],[0.0]])
+e3 = np.array([[0.0],[0.0],[1.0]])
+
+
+#sets the vector shape
+vector_shape = (3,1)
+
+#sets the epsilon (the point at which, if the cross product magnitude is less than epsilon
+#then we manually set the u vector)
+epsilon = 1e-6
 
 
 #creates the enumeration for 
@@ -63,6 +77,8 @@ class MsgWorldMap:
 
         self.generateAbMatricesLists()
 
+        self.generateFeasibilityList()
+
         potato = 0
 
     
@@ -77,9 +93,9 @@ class MsgWorldMap:
         z_max = z_min + self.pln_VTOL_Param.fieldHeight
 
         #gets the Q basis matrix
-        Q = getPlaneBasis(n_hat=self.pln_VTOL_Param.n_hat)
+        self.Q = getPlaneBasis(n_hat=self.pln_VTOL_Param.n_hat)
 
-        p0 = self.pln_VTOL_Param.obstacleOrigin_3D
+        self.p0 = self.pln_VTOL_Param.obstacleOrigin_3D
 
         #gets the Rotation matrix from the unit vector
         Rot_subspaceToWorld = getRotFromUnitVec(unitVec=self.pln_VTOL_Param.n_hat)
@@ -90,8 +106,9 @@ class MsgWorldMap:
         #gets the list of the obstacles
         self.obstaclesList = []
 
+
         #iterates over all of the obstacles in the section
-        for i in range(self.pln_VTOL_Param.numObstacles):
+        for _ in range(self.pln_VTOL_Param.numObstacles):
             
 
             #gets the randomized x and Z coordinates for the randomized position
@@ -103,8 +120,8 @@ class MsgWorldMap:
 
             #gets the random position in 3D world frame
             pos_random_3D_world = getWorldPos(pos_2D=pos_random_2D,
-                                              Q=Q,
-                                              p0=p0)
+                                              Q=self.Q,
+                                              p0=self.p0)
 
             #now we get a randomized shape for the obstacle
             random_length = np.random.uniform(low=self.pln_VTOL_Param.obstacleMinWidth,
@@ -125,26 +142,58 @@ class MsgWorldMap:
             #appends to the obstacle list
             self.obstaclesList.append(tempObstacle)
 
+            #gets the temp SFC from the obstacle
+            tempSFC = tempObstacle.getSFC()
+
+            tomato = 0            
+
         potato = 0
 
     #gets all of the A and b matrices for each of the obstacles as a large list
     def generateAbMatricesLists(self):
 
+        self.Ab_3D_list = []
 
-
-        self.Ab_list = []
+        self.Ab_2D_list = []
 
         for obstacle in self.obstaclesList:
 
             obstacleSFCTemp = obstacle.getSFC()
 
-            A_temp, b_temp = obstacleSFCTemp.getAbMatrices()
-            self.Ab_list.append([A_temp, b_temp])
+            A_3D_temp, b_3D_temp = obstacleSFCTemp.getAbMatrices()
+            self.Ab_3D_list.append([A_3D_temp, b_3D_temp])
+
+            #gets the 2D equivalents
+            A_2D = A_3D_temp @ self.Q
+            b_2D = b_3D_temp - A_3D_temp @ self.p0
+            self.Ab_2D_list.append([A_2D, b_2D])
                 
-
-
     def get_obstacles(self):
         return self.obstaclesList
+    
+    #returns the 3D Ab list
+    def get_Ab_3D(self):
+        return self.Ab_3D_list
+    
+    #returns the 2D Ab list
+    def get_Ab_2D(self):
+        return self.Ab_2D_list
+    
+
+    def generateFeasibilityList(self):
+
+        self.feasibilityList = []
+        for Ab_pair in self.Ab_2D_list:
+
+            A = Ab_pair[0]
+            b = Ab_pair[1]
+
+            dummyVariable = np.ones(A.shape[1])
+
+            #checks the feasibility of this pair
+            result = linprog(dummyVariable, A_ub=A, b_ub=b, method='highs')
+
+            self.feasibilityList.append(result.success)
 
 #defines the helper function to calculate the 3D world position given a position
 #in a 2D plane, assuming that the p0 used to define the plane is the origin
@@ -162,7 +211,45 @@ def getWorldPos(pos_2D: np.ndarray,
     return pos_3D
 
 
+
+
 def getPlaneBasis(n_hat: np.ndarray):
+
+    n_hat_temp = np.array([[0.001],[0.001],[1.0]])
+    n_hat_temp = n_hat_temp / np.linalg.norm(n_hat_temp)
+
+    #gets the cross product between e3 and n hat
+    u_candidate = (np.cross(n_hat.flatten(), e3.flatten())).reshape(vector_shape)
+
+    #gets the u candidate norm
+    u_candidate_magnitude = np.linalg.norm(u_candidate)
+
+    #edge case we are super close to parallel for n_hat and e3, we manually set the u vector
+    if u_candidate_magnitude < epsilon:
+
+        #sets u1
+        u1 = e1
+        u2 = e2
+    
+    #otherwise we get it with the cross product
+    else:
+
+        #sets u1
+        u1 = u_candidate / u_candidate_magnitude
+
+        u2 = np.cross(n_hat.flatten(), u1.flatten()).reshape(vector_shape)
+        #normalizes it just in case
+        u2 = u2 / np.linalg.norm(u2)
+
+    #creates the Q vector
+    Q = np.concatenate((u1, u2), axis=1)
+
+    return Q
+
+
+
+
+def getPlaneBasis_old(n_hat: np.ndarray):
 
 
     #gets the SVD of the n hat

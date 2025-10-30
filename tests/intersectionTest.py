@@ -20,8 +20,8 @@ worldMap = MsgWorldMap(obstacleFieldType='rectangular',
                        numBlocks=5)
 
 #gets the A and b matrices from the first obstacle
-A_obs = (worldMap.Ab_list[0])[0]
-b_obs = (worldMap.Ab_list[0])[1]
+A_obs = (worldMap.Ab_3D_list[0])[0]
+b_obs = (worldMap.Ab_3D_list[0])[1]
 
 #creates a flight Corridor
 tempFlightCorridor = MsgFlightCorridor(primaryPosition=np.array([[200.0],[0.0],[PLAN.altitude]]),

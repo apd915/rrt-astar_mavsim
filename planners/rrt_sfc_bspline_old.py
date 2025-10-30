@@ -78,8 +78,6 @@ class RRTBSpline:
         
         return self.waypoints_not_smooth
 
-
-    
     def extend_initial_tree(self,
                             worldMap: MsgWorldMap,
                             altitude: float = None):
@@ -280,13 +278,4 @@ def randomPosition_3D(world_map: MsgWorldMap):
     randomPosition = np.array([[pn_rand],[pe_rand],[pd_rand]])
     #returns the random position
     return randomPosition
-
-
-
-
-    
-
-
-
-
 
