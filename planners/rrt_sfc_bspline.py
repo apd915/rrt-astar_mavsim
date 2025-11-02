@@ -24,7 +24,9 @@ class RRT_SFC_BSpline:
                  Va: float,
                  rho: np.ndarray,
                  step_length: float,
-                 numDesiredInitPaths: int):
+                 numDesiredInitPaths: int,
+                 n_hat: np.ndarray = None,#the normal vector for the working plane (if )
+                 p0: np.ndarray = None):
         
         #saves all of them
         self.numDimensions = numDimensions
@@ -34,6 +36,9 @@ class RRT_SFC_BSpline:
         self.stepLength = step_length
         self.numDesiredInitPaths = numDesiredInitPaths
 
+        self.n_hat = n_hat
+        self.p0 = p0
+
         #creates the B-Splines
         self.bsplineParam = BsplineParameters()
 
@@ -42,13 +47,58 @@ class RRT_SFC_BSpline:
                       startPosition: np.ndarray,
                       endPosition: np.ndarray,
                       worldMap: MsgWorldMap,
-                      segmentLength: float,
-                      altitude: float):
+                      segmentLength: float):
         
         self.startPosition = startPosition
         self.endPosition = endPosition
         self.worldMap = worldMap
         self.segmentLength = segmentLength
-        self.altitude = altitude
 
-        self.tree = MsgWaypoints_SFC
+        self.tree = MsgWaypoints_SFC(numDimensions=self.numDimensions)
+
+
+        #calls the generate paths based on the 2D or 3D case
+        if self.numDimensions == 2:
+
+            self.__generatePaths_2D()
+
+        elif self.numDimensions == 3:
+
+            self.__generatePaths_3D()
+
+
+    #creates the version for 2D
+    def __generatePaths_2D(self):
+
+        #gets the projected start and end positions
+        startPosition_projected = projectPosition(pos_3D=self.startPosition,
+                                                  p_0=self.p0,
+                                                  n_hat=self.n_hat)
+        
+        endPosition_projected = projectPosition(pos_3D=self.endPosition,
+                                                p_0=self.p0,
+                                                n_hat=self.n_hat)
+
+        potato = 0
+
+    def __generatePaths_3D(self):
+
+        pass
+
+
+
+#defines the function to project a position onto a plane
+def projectPosition(pos_3D: np.ndarray, #the 3D position of the point (the point not on the plane)
+                    p_0: np.ndarray, #the 3D position of the origin on the plane (The zero position on the plane)
+                    n_hat: np.ndarray): #the unit vector of the plane 
+    
+    #gets the vector from p0 to pos_3D
+    vec_p0_to_point = pos_3D - p_0
+
+    dotProduct = np.dot(a=vec_p0_to_point.flatten(), b=n_hat.flatten())
+    #now that this is relative to the origin, gets the projection onto the n_hat
+    n_hat_proj = (dotProduct/(np.linalg.norm(n_hat)**2))*n_hat
+    #gets the projection onto the plane, which is the vector minus the n_hat projection
+    vec_proj = vec_p0_to_point - n_hat_proj
+    #returns the projected vector
+    return vec_proj

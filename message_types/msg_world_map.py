@@ -38,8 +38,8 @@ class PlanarVTOLParams:
                  obstacleMaxWidth: float = PLANAR_PARAM.obstacleMaxWidth,
                  obstacleMinWidth: float = PLANAR_PARAM.obstacleMinWidth,
                  obstacleDepth: float = PLANAR_PARAM.obstacleDepth,
-                 obstacleOrigin_2D: np.ndarray = None,
-                 obstacleOrigin_3D: np.ndarray = None,
+                 mapOrigin_2D: np.ndarray = None,
+                 mapOrigin_3D: np.ndarray = None,
                  n_hat: np.ndarray = None,
                  numObstacles: int = PLANAR_PARAM.numObstacles):
         
@@ -48,8 +48,8 @@ class PlanarVTOLParams:
         self.obstacleMaxWidth = obstacleMaxWidth
         self.obstacleMinWidth = obstacleMinWidth
         self.obstacleDepth = obstacleDepth
-        self.obstacleOrigin_2D = obstacleOrigin_2D
-        self.obstacleOrigin_3D = obstacleOrigin_3D
+        self.mapOrigin_2D = mapOrigin_2D
+        self.mapOrigin_3D = mapOrigin_3D
         self.n_hat = n_hat
         self.numObstacles = numObstacles
 
@@ -86,8 +86,8 @@ class MsgWorldMap:
 
         #creates map of randomized obstacles for the 
         #in the 2D planar space, we get the bounds for x and y
-        x_min = self.pln_VTOL_Param.obstacleOrigin_2D.item(0)
-        z_min = self.pln_VTOL_Param.obstacleOrigin_2D.item(1)
+        x_min = self.pln_VTOL_Param.mapOrigin_2D.item(0)
+        z_min = self.pln_VTOL_Param.mapOrigin_2D.item(1)
 
         x_max = x_min + self.pln_VTOL_Param.fieldLength
         z_max = z_min + self.pln_VTOL_Param.fieldHeight
@@ -95,7 +95,7 @@ class MsgWorldMap:
         #gets the Q basis matrix
         self.Q = getPlaneBasis(n_hat=self.pln_VTOL_Param.n_hat)
 
-        self.p0 = self.pln_VTOL_Param.obstacleOrigin_3D
+        self.p0 = self.pln_VTOL_Param.mapOrigin_3D
 
         #gets the Rotation matrix from the unit vector
         Rot_subspaceToWorld = getRotFromUnitVec(unitVec=self.pln_VTOL_Param.n_hat)

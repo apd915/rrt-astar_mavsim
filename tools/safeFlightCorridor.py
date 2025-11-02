@@ -46,9 +46,7 @@ class SFC:
 
         normals, vertices = self.getNormalsVertices()
 
-        numDimensions = np.size(self.dimensions)
-
-        self.A = np.ndarray((0, numDimensions))
+        self.A = np.ndarray((0, self.numDimensions))
 
         self.b = np.ndarray((0, 1))
 

@@ -1,60 +1,54 @@
-#creates the launch file for the B-Spline rrt SFC launch
-
 import os, sys
 # insert parent directory at beginning of python search path
 from pathlib import Path
 sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
 
+
 import numpy as np
-from message_types.msg_world_map import MsgWorldMap
+from message_types.msg_world_map import MsgWorldMap, PlanarVTOLParams, MapTypes
 from viewers.view_manager import ViewManager
-from planners.rrt_sfc_bspline import RRTBSpline
+from planners.rrt_sfc_bspline import RRT_SFC_BSpline
 import parameters.planner_parameters as PLAN
 import parameters.flightCorridor_parameters as FLIGHT_PLAN
+import parameters.planarVTOL_map_parameters as VTOL_PARAM
 
 
-#sets the number of dimensions right here
 numDimensions = 2
-
-
 
 viewerManager = ViewManager(mav=False,
                             planningFlag=True)
 
+mapOrigin_2D = np.array([[0.0],[0.0]])
+mapOrigin_3D = np.array([[0.0],[0.0],[0.0]])
+n_hat = np.array([[0.0],[1.0],[0.0]])
 
-worldMap = MsgWorldMap(obstacleFieldType='rectangular',
-                       numDimensions = numDimensions,
-                       fieldWidth=2000.0,
-                       obstacleWidthRatio=0.3,
-                       obstacleWidth_sigma=1.0,
-                       numBlocks=5)
+startPosition = mapOrigin_3D
+endPosition = np.array([[10000.0],[0.0],[1000.0]])
 
-pathGenerator = RRTBSpline(numDimensions=numDimensions,
-                           M=FLIGHT_PLAN.M,
-                           Va=PLAN.Va0,
-                           rho=FLIGHT_PLAN.rho,
-                           step_length=FLIGHT_PLAN.segmentLength,
-                           numDesiredInitPaths=FLIGHT_PLAN.numInitialPaths)
-
-#gets the center positions of the world map
-centerPositions = worldMap.getCenterPositionsList()
+#creates the planar vtol params
+params = PlanarVTOLParams(mapOrigin_2D=mapOrigin_2D,
+                          mapOrigin_3D=mapOrigin_3D,
+                          n_hat=n_hat)
 
 
-#'''
-#calls the function to generate the paths
-waypointsNotSmooth =\
- pathGenerator.generatePaths(worldMap=worldMap,
-                            segmentLength=FLIGHT_PLAN.segmentLength,
-                            altitude=PLAN.altitude)
-#'''
+worldMap = MsgWorldMap(obstacleFieldType=MapTypes.PLANAR_VTOL,
+                       numDimensions_algorithm=numDimensions,
+                       planarVTOL_Params=params)
 
 
-viewerManager.update_planning_tree(waypoints=waypointsNotSmooth,
-                                   waypoints_not_smooth=None,
-                                   tree=None,
-                                   world_map=worldMap,
-                                   optimizedControlPoints=None)
+planner = RRT_SFC_BSpline(numDimensions=numDimensions,
+                          M=FLIGHT_PLAN.M,
+                          Va=PLAN.Va0,
+                          rho=FLIGHT_PLAN.rho,
+                          step_length=FLIGHT_PLAN.segmentLength,
+                          numDesiredInitPaths=FLIGHT_PLAN.numInitialPaths,
+                          n_hat=n_hat,
+                          p0=mapOrigin_3D)
 
 
+planner.generatePaths(startPosition=startPosition,
+                      endPosition=endPosition,
+                      worldMap=worldMap,
+                      segmentLength=FLIGHT_PLAN.segmentLength)
 
 potato = 0

@@ -21,8 +21,8 @@ vtolParam = PlanarVTOLParams(fieldHeight=VTOL_PARAM.mapHeight,
                              obstacleMaxWidth=VTOL_PARAM.obstacleMaxWidth,
                              obstacleMinWidth=VTOL_PARAM.obstacleMinWidth,
                              obstacleDepth=VTOL_PARAM.obstacleDepth,
-                             obstacleOrigin_2D=np.array([[0.0],[0.0]]),
-                             obstacleOrigin_3D=p0,
+                             mapOrigin_2D=np.array([[0.0],[0.0]]),
+                             mapOrigin_3D=p0,
                              n_hat=n_hat,
                              numObstacles=VTOL_PARAM.numObstacles)
 

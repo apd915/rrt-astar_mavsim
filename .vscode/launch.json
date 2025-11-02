@@ -5,6 +5,7 @@
 
 
 
+
         {
             "name": "Python: Launch RRT MAVSim (PyQt Safe)",
             "type": "debugpy",
@@ -66,6 +67,34 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/tests/mapTest.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/eVTOL_BSplines:${workspaceFolder}/eVTOL_BSplines/path_generator",
+                "PYQTGRAPH_QT_LIB": "PyQt5"
+            },
+            "python": "/home/benjamin/vvv/bin/python",
+            "subProcess": false
+        },
+        {
+            "name": "Flight Corridor Test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/flightCorridorTest.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/eVTOL_BSplines:${workspaceFolder}/eVTOL_BSplines/path_generator",
+                "PYQTGRAPH_QT_LIB": "PyQt5"
+            },
+            "python": "/home/benjamin/vvv/bin/python",
+            "subProcess": false
+        },
+        {
+            "name": "Projected Test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/projectedTest.py",
             "console": "integratedTerminal",
             "justMyCode": false,
             "env": {
