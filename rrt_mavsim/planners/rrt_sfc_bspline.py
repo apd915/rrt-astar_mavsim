@@ -220,6 +220,9 @@ class RRT_SFC_BSpline:
         
         
         return connectedToEnd
+    
+    def getWaypointsNotSmooth(self):
+        return self.waypoints_not_smooth
 
 
 

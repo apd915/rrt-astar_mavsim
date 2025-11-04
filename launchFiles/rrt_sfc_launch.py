@@ -5,12 +5,12 @@ sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
 
 
 import numpy as np
-from message_types.msg_world_map import MsgWorldMap, PlanarVTOLParams, MapTypes
-from viewers.view_manager import ViewManager
-from planners.rrt_sfc_bspline import RRT_SFC_BSpline
-import parameters.planner_parameters as PLAN
-import parameters.flightCorridor_parameters as FLIGHT_PLAN
-import parameters.planarVTOL_map_parameters as VTOL_PARAM
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap, PlanarVTOLParams, MapTypes
+from rrt_mavsim.viewers.view_manager import ViewManager
+from rrt_mavsim.planners.rrt_sfc_bspline import RRT_SFC_BSpline
+import rrt_mavsim.parameters.planner_parameters as PLAN
+import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PLAN
+import rrt_mavsim.parameters.planarVTOL_map_parameters as VTOL_PARAM
 
 
 numDimensions = 2
@@ -50,5 +50,9 @@ planner.generatePaths(startPosition_3D=startPosition,
                       endPosition_3D=endPosition,
                       worldMap=worldMap,
                       segmentLength=FLIGHT_PLAN.segmentLength)
+
+
+#gets the not smooth waypoints
+waypointsNotSmooth = planner.getWaypointsNotSmooth()
 
 potato = 0
