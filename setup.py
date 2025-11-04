@@ -14,7 +14,7 @@ import multiprocessing
 setup(
     name="rrt_mavsim",
     version="0.1.0",
-    packages=find_packages(include=["eVTOL_BSplines"]),
+    packages=find_packages(include=["rrt_mavsim", "rrt_mavsim.*"]),
     include_package_data=True,
     install_requires=["numpy"]
 )
