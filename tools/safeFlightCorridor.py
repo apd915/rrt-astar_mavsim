@@ -280,3 +280,5 @@ class SFC:
     
 
 
+    def getNumDimensions(self):
+        return self.numDimensions

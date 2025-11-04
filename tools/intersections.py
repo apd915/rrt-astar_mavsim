@@ -12,8 +12,16 @@ def intersectionDetected(corridor: MsgFlightCorridor,
                          world_map: MsgWorldMap):
     
 
-    #gets the map obstacles list
-    map_A_b_lists = world_map.getAbMatricesLists()
+    #gets the number of dimensions of this problem
+    numDimensions = world_map.numDimensions_algorithm
+
+    #if this is a 2D problem
+    if numDimensions == 2:
+        map_A_b_lists = world_map.get_Ab_2D()
+    elif numDimensions == 3:
+        map_A_b_lists = world_map.get_Ab_3D()
+
+
 
     #gets the corridor A and b matrices
     A_corridor, b_corridor = corridor.getAbMatrices()

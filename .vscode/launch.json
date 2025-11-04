@@ -103,6 +103,20 @@
             },
             "python": "/home/benjamin/vvv/bin/python",
             "subProcess": false
+        },
+        {
+            "name": "Basis Test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/basisTest.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/eVTOL_BSplines:${workspaceFolder}/eVTOL_BSplines/path_generator",
+                "PYQTGRAPH_QT_LIB": "PyQt5"
+            },
+            "python": "/home/benjamin/vvv/bin/python",
+            "subProcess": false
         }
     ]
 }

@@ -6,6 +6,7 @@ from scipy.optimize import linprog
 import time
 from enum import Enum
 from tools.getEulerUnit import getRotFromUnitVec
+from tools.plane_projections import *
 
 #sets the e1, e2, and e3 vectors
 e1 = np.array([[1.0],[0.0],[0.0]])
@@ -49,9 +50,35 @@ class PlanarVTOLParams:
         self.obstacleMinWidth = obstacleMinWidth
         self.obstacleDepth = obstacleDepth
         self.mapOrigin_2D = mapOrigin_2D
-        self.mapOrigin_3D = mapOrigin_3D
+        self.mapOrigin_3D = mapOrigin_3D# this is also called p0
         self.n_hat = n_hat
         self.numObstacles = numObstacles
+
+
+        #creates the dimensions of search
+        #Note on the end altitude. Remember that in the 3D world frame, we define the positive
+        #Z axis in the down direction. But I want the plane to end up at an altitude of 2000 units
+        #so that means the search area will be freom the origin (0,0) to (0,2k) to (10k, -2k) to (10k,0)
+        self.searchDimensions_3D = np.array([[0.0, self.fieldLength],
+                                             [0.0, 0.0],
+                                             [0.0, -self.fieldHeight]])
+        
+        self.startPosition = (self.searchDimensions_3D)[:,0:1]
+        self.endPosition = (self.searchDimensions_3D)[:,1:2]
+
+        searchDimensions_3D_projected = projectPosition_toPlane(pos_3D=self.searchDimensions_3D,
+                                                                p_0=self.mapOrigin_3D,
+                                                                n_hat=n_hat)
+        
+        ##gets the positions 2D
+        searchDimensions_2D = map_3D_to_2D(pos_3D=)
+
+
+        #with the 3d Dimensions, we project them, and shrimk them
+
+
+
+
 
 
 class MsgWorldMap:
@@ -73,6 +100,9 @@ class MsgWorldMap:
         if obstacleFieldType == MapTypes.PLANAR_VTOL:
 
             self.initPlanarVTOL_map()
+
+            #sets the search dimensions
+            self.searchDimensions = planarVTOL_Params.searchDimensions
 
 
         self.generateAbMatricesLists()
@@ -163,10 +193,12 @@ class MsgWorldMap:
             A_3D_temp, b_3D_temp = obstacleSFCTemp.getAbMatrices()
             self.Ab_3D_list.append([A_3D_temp, b_3D_temp])
 
-            #gets the 2D equivalents
-            A_2D = A_3D_temp @ self.Q
-            b_2D = b_3D_temp - A_3D_temp @ self.p0
-            self.Ab_2D_list.append([A_2D, b_2D])
+            #case this is a 2D map
+            if self.numDimensions_algorithm == 2:
+                #gets the 2D equivalents
+                A_2D = A_3D_temp @ self.Q
+                b_2D = b_3D_temp - A_3D_temp @ self.p0
+                self.Ab_2D_list.append([A_2D, b_2D])
                 
     def get_obstacles(self):
         return self.obstaclesList
@@ -178,6 +210,10 @@ class MsgWorldMap:
     #returns the 2D Ab list
     def get_Ab_2D(self):
         return self.Ab_2D_list
+    
+    #returns the Q matrix
+    def get_Q(self):
+        return self.Q
     
 
     def generateFeasibilityList(self):
@@ -213,38 +249,7 @@ def getWorldPos(pos_2D: np.ndarray,
 
 
 
-def getPlaneBasis(n_hat: np.ndarray):
 
-    n_hat_temp = np.array([[0.001],[0.001],[1.0]])
-    n_hat_temp = n_hat_temp / np.linalg.norm(n_hat_temp)
-
-    #gets the cross product between e3 and n hat
-    u_candidate = (np.cross(n_hat.flatten(), e3.flatten())).reshape(vector_shape)
-
-    #gets the u candidate norm
-    u_candidate_magnitude = np.linalg.norm(u_candidate)
-
-    #edge case we are super close to parallel for n_hat and e3, we manually set the u vector
-    if u_candidate_magnitude < epsilon:
-
-        #sets u1
-        u1 = e1
-        u2 = e2
-    
-    #otherwise we get it with the cross product
-    else:
-
-        #sets u1
-        u1 = u_candidate / u_candidate_magnitude
-
-        u2 = np.cross(n_hat.flatten(), u1.flatten()).reshape(vector_shape)
-        #normalizes it just in case
-        u2 = u2 / np.linalg.norm(u2)
-
-    #creates the Q vector
-    Q = np.concatenate((u1, u2), axis=1)
-
-    return Q
 
 
 

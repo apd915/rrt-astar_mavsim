@@ -22,8 +22,10 @@ mapOrigin_2D = np.array([[0.0],[0.0]])
 mapOrigin_3D = np.array([[0.0],[0.0],[0.0]])
 n_hat = np.array([[0.0],[1.0],[0.0]])
 
-startPosition = mapOrigin_3D
-endPosition = np.array([[10000.0],[0.0],[1000.0]])
+tempParams = PlanarVTOLParams()
+
+startPosition = tempParams.startPosition
+endPosition = tempParams.endPosition
 
 #creates the planar vtol params
 params = PlanarVTOLParams(mapOrigin_2D=mapOrigin_2D,
@@ -46,8 +48,8 @@ planner = RRT_SFC_BSpline(numDimensions=numDimensions,
                           p0=mapOrigin_3D)
 
 
-planner.generatePaths(startPosition=startPosition,
-                      endPosition=endPosition,
+planner.generatePaths(startPosition_3D=startPosition,
+                      endPosition_3D=endPosition,
                       worldMap=worldMap,
                       segmentLength=FLIGHT_PLAN.segmentLength)
 

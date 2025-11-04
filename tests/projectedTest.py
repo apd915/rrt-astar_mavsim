@@ -4,7 +4,7 @@ from pathlib import Path
 sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
 
 import numpy as np
-from planners.rrt_sfc_bspline import projectPosition
+from planners.rrt_sfc_bspline import projectPosition_toPlane
 
 
 
@@ -19,7 +19,7 @@ pos_3D = np.array([[10.0],[10.0],[10.0]])
 
 
 
-projectedVector = projectPosition(pos_3D=pos_3D,
+projectedVector = projectPosition_toPlane(pos_3D=pos_3D,
                                   p_0=p0,
                                   n_hat=n_hat)
 
