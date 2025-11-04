@@ -22,16 +22,14 @@ mapOrigin_2D = np.array([[0.0],[0.0]])
 mapOrigin_3D = np.array([[0.0],[0.0],[0.0]])
 n_hat = np.array([[0.0],[1.0],[0.0]])
 
-tempParams = PlanarVTOLParams()
-
-startPosition = tempParams.startPosition
-endPosition = tempParams.endPosition
 
 #creates the planar vtol params
 params = PlanarVTOLParams(mapOrigin_2D=mapOrigin_2D,
                           mapOrigin_3D=mapOrigin_3D,
                           n_hat=n_hat)
 
+startPosition = params.startPosition
+endPosition = params.endPosition
 
 worldMap = MsgWorldMap(obstacleFieldType=MapTypes.PLANAR_VTOL,
                        numDimensions_algorithm=numDimensions,

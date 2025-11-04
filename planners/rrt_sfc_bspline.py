@@ -217,6 +217,9 @@ class RRT_SFC_BSpline:
 
                         #sets connected to end to true
                         connectedToEnd = True
+        
+        
+        return connectedToEnd
 
 
 
@@ -280,14 +283,15 @@ def generateRandomCandidate(world_map: MsgWorldMap,
 def generateRandomPosition_2D(worldMap: MsgWorldMap):
 
     #gets the world map dimensions
-    map_dim = worldMap.searchDimensions
+    startDim = worldMap.searchDimensions_start
+    endDim = worldMap.searchDimensions_end
 
     #gets the map dimensions rotated into 
 
     #gets the x_random position
-    x_random = np.random.uniform(low=map_dim[0,0], high=map_dim[0,1])
+    x_random = np.random.uniform(low=startDim.item(0), high=endDim.item(0))
 
-    y_random = np.random.uniform(low=map_dim[1,0], high=map_dim[1,1])
+    y_random = np.random.uniform(low=startDim.item(1), high=endDim.item(1))
 
     random_position = np.array([[x_random],[y_random]])
 
@@ -298,14 +302,15 @@ def generateRandomPosition_2D(worldMap: MsgWorldMap):
 def generateRandomPosition_3D(worldMap: MsgWorldMap):
 
     #gets the world map dimensions
-    map_dim = worldMap.searchDimensions
+    startDim = worldMap.searchDimensions_start
+    endDim = worldMap.searchDimensions_end
 
     #gets the x_random position
-    x_random = np.random.uniform(low=map_dim[0,0], high=map_dim[0,1])
+    x_random = np.random.uniform(low=startDim.item(0), high=endDim.item(0))
 
-    y_random = np.random.uniform(low=map_dim[1,0], high=map_dim[1,1])
+    y_random = np.random.uniform(low=startDim.item(1), high=endDim.item(1))
 
-    z_random = np.random.uniform(low=map_dim[2,0], high=map_dim[2,1])
+    z_random = np.random.uniform(low=startDim.item(2), high=endDim.item(2))
 
     random_position = np.array([[x_random],[y_random],[z_random]])
 

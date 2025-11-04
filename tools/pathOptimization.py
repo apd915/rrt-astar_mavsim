@@ -81,7 +81,8 @@ def findMinimumPath(tree: MsgWaypoints_SFC,
 
         #gets the flight corridor
         tempCorridor = MsgFlightCorridor(primaryPosition=startTempPosition,
-                                            secondaryPosition=endTempPosition)
+                                            secondaryPosition=endTempPosition,
+                                            numDimensions=tree.numDimensions)
 
         minPathWaypoints.addSFC(sfc=tempCorridor)
 

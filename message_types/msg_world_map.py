@@ -8,18 +8,6 @@ from enum import Enum
 from tools.getEulerUnit import getRotFromUnitVec
 from tools.plane_projections import *
 
-#sets the e1, e2, and e3 vectors
-e1 = np.array([[1.0],[0.0],[0.0]])
-e2 = np.array([[0.0],[1.0],[0.0]])
-e3 = np.array([[0.0],[0.0],[1.0]])
-
-
-#sets the vector shape
-vector_shape = (3,1)
-
-#sets the epsilon (the point at which, if the cross product magnitude is less than epsilon
-#then we manually set the u vector)
-epsilon = 1e-6
 
 
 #creates the enumeration for 
@@ -63,22 +51,29 @@ class PlanarVTOLParams:
                                              [0.0, 0.0],
                                              [0.0, -self.fieldHeight]])
         
-        self.startPosition = (self.searchDimensions_3D)[:,0:1]
-        self.endPosition = (self.searchDimensions_3D)[:,1:2]
+        self.startPosition = np.array([[0.0],[0.0],[0.0]])
+        self.endPosition = np.array([[self.fieldLength],[0.0],[-self.fieldHeight]])
 
-        searchDimensions_3D_projected = projectPosition_toPlane(pos_3D=self.searchDimensions_3D,
-                                                                p_0=self.mapOrigin_3D,
-                                                                n_hat=n_hat)
+        self.searchDimension_3D_start = self.startPosition
+        self.searchDimension_3D_end = self.endPosition
+
+        self.searchDimension_3D_projected_start = projectPosition_toPlane(pos_3D=self.searchDimension_3D_start,
+                                                                          p_0=self.mapOrigin_3D,
+                                                                          n_hat=n_hat)
+
+        self.searchDimension_3D_projected_end = projectPosition_toPlane(pos_3D=self.searchDimension_3D_end,
+                                                                          p_0=self.mapOrigin_3D,
+                                                                          n_hat=n_hat)
+
+        self.searchDimensions_2D_start = map_3D_to_2D(pos_3D=self.searchDimension_3D_projected_start,
+                                                 n_hat=n_hat,
+                                                 p0=self.mapOrigin_3D)
         
-        ##gets the positions 2D
-        searchDimensions_2D = map_3D_to_2D(pos_3D=)
-
-
-        #with the 3d Dimensions, we project them, and shrimk them
-
-
-
-
+        self.searchdimensions_2D_end = map_3D_to_2D(pos_3D=self.searchDimension_3D_projected_end,
+                                               n_hat=n_hat,
+                                               p0=self.mapOrigin_3D)
+        
+        potato = 0
 
 
 class MsgWorldMap:
@@ -102,7 +97,8 @@ class MsgWorldMap:
             self.initPlanarVTOL_map()
 
             #sets the search dimensions
-            self.searchDimensions = planarVTOL_Params.searchDimensions
+            self.searchDimensions_start = planarVTOL_Params.searchDimensions_2D_start
+            self.searchDimensions_end = planarVTOL_Params.searchdimensions_2D_end
 
 
         self.generateAbMatricesLists()
@@ -249,19 +245,3 @@ def getWorldPos(pos_2D: np.ndarray,
 
 
 
-
-
-
-
-
-def getPlaneBasis_old(n_hat: np.ndarray):
-
-
-    #gets the SVD of the n hat
-    U, S, Vt = np.linalg.svd(n_hat.T)
-
-    #gets the basis from the Vt
-    Q = Vt[:,1:]
-
-
-    return Q
