@@ -1,22 +1,14 @@
-import os, sys
-# insert parent directory at beginning of python search path
-from pathlib import Path
-sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
 
-currentWorkingDirectory = os.getcwd()
-import parameters.planner_parameters as PLAN
-
-
+import rrt_mavsim.parameters.planner_parameters as PLAN
 import numpy as np
-import parameters.planner_parameters as PLAN
-import parameters.planarVTOL_map_parameters as PLANAR_PARAM
-from tools.obstacles import RectangularObstacle
+import rrt_mavsim.parameters.planner_parameters as PLAN
+import rrt_mavsim.parameters.planarVTOL_map_parameters as PLANAR_PARAM
+from rrt_mavsim.tools.obstacles import RectangularObstacle
 from scipy.optimize import linprog
 import time
 from enum import Enum
-from tools.getEulerUnit import getRotFromUnitVec
-from tools.plane_projections import *
-
+from rrt_mavsim.tools.getEulerUnit import getRotFromUnitVec
+from rrt_mavsim.tools.plane_projections import *
 
 
 #creates the enumeration for 

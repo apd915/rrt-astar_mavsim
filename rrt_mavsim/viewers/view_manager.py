@@ -1,9 +1,9 @@
 #creates the class to view the Obstacles and the Fligth path and everything
 
 import pyqtgraph as pg
-from message_types.msg_waypoints import MsgWaypoints_SFC
-from viewers.planner_viewer import PlannerViewer
-from message_types.msg_world_map import MsgWorldMap
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.viewers.planner_viewer import PlannerViewer
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
 import numpy as np
 
 

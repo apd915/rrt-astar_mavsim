@@ -1,7 +1,7 @@
 import numpy as np
 import pyqtgraph.opengl as gl
-from message_types.msg_world_map import MsgWorldMap
-from tools.obstacles import RectangularObstacle
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
+from rrt_mavsim.tools.obstacles import RectangularObstacle
 
 
 class DrawMap:

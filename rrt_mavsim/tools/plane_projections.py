@@ -1,6 +1,6 @@
 import numpy as np
 
-import parameters.projection_parameters as PROJ
+import rrt_mavsim.parameters.projection_parameters as PROJ
 
 #defines the function to project a position onto a plane
 def projectPosition_toPlane(pos_3D: np.ndarray, #the 3D position of the point (the point not on the plane)

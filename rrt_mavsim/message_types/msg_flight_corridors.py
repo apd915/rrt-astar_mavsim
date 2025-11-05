@@ -1,7 +1,7 @@
 import numpy as np
-import parameters.flightCorridor_parameters as FLIGHT_PARAM
-from tools.safeFlightCorridor import SFC
-from tools.rotations import euler_to_rotation, euler_to_rotation_2D
+import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PARAM
+from rrt_mavsim.tools.safeFlightCorridor import SFC
+from rrt_mavsim.tools.rotations import euler_to_rotation, euler_to_rotation_2D
 
 #A note on the following:
 #if this is a 2D flight corridor, the positions will be given in 2D,

@@ -1,5 +1,5 @@
 import numpy as np
-from tools.rotations import euler_to_quaternion
+from rrt_mavsim.tools.rotations import euler_to_quaternion
 
 ######################################################################################
                 #   Initial Conditions

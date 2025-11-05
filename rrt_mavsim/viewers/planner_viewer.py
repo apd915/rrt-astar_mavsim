@@ -2,14 +2,14 @@
 
 import numpy as np
 import pyqtgraph.opengl as gl
-from message_types.msg_world_map import MsgWorldMap
-from message_types.msg_waypoints import MsgWaypoints_SFC
-from viewers.draw_map import DrawMap
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.viewers.draw_map import DrawMap
 import pyqtgraph as pg
-import parameters.planner_parameters as PLAN
-import parameters.flightCorridor_parameters as FLIGHT_PLAN
-from viewers.draw_waypoints import DrawWaypoints
-from viewers.drawEndPoints import DrawEndMarker
+import rrt_mavsim.parameters.planner_parameters as PLAN
+import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PLAN
+from rrt_mavsim.viewers.draw_waypoints import DrawWaypoints
+from rrt_mavsim.viewers.drawEndPoints import DrawEndMarker
 
 
 class PlannerViewer:

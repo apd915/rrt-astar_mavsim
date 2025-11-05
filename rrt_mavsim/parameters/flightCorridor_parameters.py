@@ -1,5 +1,5 @@
 import numpy as np
-import parameters.planner_parameters as PLAN
+import rrt_mavsim.parameters.planner_parameters as PLAN
 
 #sets the part that extends before the start position
 startExtension = 30.0

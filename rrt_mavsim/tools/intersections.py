@@ -2,8 +2,8 @@
 
 import numpy as np
 from scipy.optimize import linprog
-from message_types.msg_flight_corridors import MsgFlightCorridor
-from message_types.msg_world_map import MsgWorldMap
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
 
 
 

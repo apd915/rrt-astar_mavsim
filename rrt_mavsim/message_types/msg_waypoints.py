@@ -1,5 +1,5 @@
 import numpy as np
-from message_types.msg_flight_corridors import MsgFlightCorridor
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 
 class MsgWaypoints_SFC:
 

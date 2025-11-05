@@ -1,9 +1,9 @@
 #defines the function to draw the waypoints 
 import numpy as np
 import pyqtgraph.opengl as gl
-from message_types.msg_waypoints import MsgWaypoints_SFC
-from message_types.msg_flight_corridors import MsgFlightCorridor
-import parameters.display_parameters as DISPLAY
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+import rrt_mavsim.parameters.display_parameters as DISPLAY
 
 
 R = np.array([[0, 1, 0], 

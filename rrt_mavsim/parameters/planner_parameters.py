@@ -1,5 +1,5 @@
 import numpy as np
-import parameters.aerosonde_parameters as MAV
+import rrt_mavsim.parameters.aerosonde_parameters as MAV
 
 # size of the waypoint array used for the path planner.  This is the
 # maximum number of waypoints that might be transmitted to the path

@@ -5,8 +5,8 @@ import numpy as np
 from eVTOL_BSplines.path_generation_helpers.staticFlightPath import staticFlightPath
 from eVTOL_BSplines.message_types.msg_control_points import MSG_Control_Points
 from bsplinegenerator.bsplines import BsplineEvaluation
-from message_types.msg_bspline_conditions import MsgBsplineConditions
-from message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.message_types.msg_bspline_conditions import MsgBsplineConditions
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 import time
 import copy
 

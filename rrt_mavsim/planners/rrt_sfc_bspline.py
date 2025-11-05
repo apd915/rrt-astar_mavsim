@@ -1,17 +1,17 @@
 import numpy as np
-from planners.bspline_parameters import BsplineParameters
-from message_types.msg_bspline_conditions import MsgBsplineConditions
-from message_types.msg_world_map import MsgWorldMap, MapTypes, PlanarVTOLParams
-from message_types.msg_waypoints import MsgWaypoints_SFC
-from message_types.msg_flight_corridors import MsgFlightCorridor
-import parameters.planner_parameters as PLAN
-import parameters.flightCorridor_parameters as FLIGHT_PLAN
+from rrt_mavsim.planners.bspline_parameters import BsplineParameters
+from rrt_mavsim.message_types.msg_bspline_conditions import MsgBsplineConditions
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap, MapTypes, PlanarVTOLParams
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+import rrt_mavsim.parameters.planner_parameters as PLAN
+import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PLAN
 import random
 import time
 import scipy as sp
-from tools.intersections import intersectionOccurred_Matrix, intersectionDetected
-from tools.pathOptimization import findMinimumPath
-from tools.plane_projections import projectPosition_toPlane, map_2D_to_3D, map_3D_to_2D
+from rrt_mavsim.tools.intersections import intersectionOccurred_Matrix, intersectionDetected
+from rrt_mavsim.tools.pathOptimization import findMinimumPath
+from rrt_mavsim.tools.plane_projections import projectPosition_toPlane, map_2D_to_3D, map_3D_to_2D
 import heapq
 
 

@@ -1,9 +1,9 @@
 import numpy as np
-from message_types.msg_waypoints import MsgWaypoints_SFC
-from message_types.msg_flight_corridors import MsgFlightCorridor
-from message_types.msg_world_map import MsgWorldMap
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
 import heapq
-from tools.intersections import intersectionDetected
+from rrt_mavsim.tools.intersections import intersectionDetected
 
 
 #contains functions that help optimize the SFC Path, once a valid path has been found in the tree expansion

@@ -1,7 +1,7 @@
 #creates the class to create obstacles
 import numpy as np
-import parameters.planner_parameters as PLAN
-from tools.safeFlightCorridor import SFC
+import rrt_mavsim.parameters.planner_parameters as PLAN
+from rrt_mavsim.tools.safeFlightCorridor import SFC
 
 
 
