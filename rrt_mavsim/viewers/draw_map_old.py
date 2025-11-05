@@ -1,7 +1,9 @@
+
+#draws the map of the obstacles
+
 import numpy as np
 import pyqtgraph.opengl as gl
 from message_types.msg_world_map import MsgWorldMap
-from tools.obstacles import RectangularObstacle
 
 
 class DrawMap:
@@ -10,27 +12,51 @@ class DrawMap:
                  map: MsgWorldMap,
                  window: gl.GLViewWidget):
         
-
         self.window = window
 
-        numDimensions = map.numDimensions_algorithm
+
+        #gets the number of dimensions
+        numDimensions = map.numDimensions
+
 
         #with the window, let us start drawing up the obstacles
         fullMesh = np.array([], dtype=np.float32).reshape(0, 3, 3)
         fullMeshColors = np.array([], dtype=np.float32).reshape(0, 3, 4)
 
 
-        #iterates over all fo the obstacles in the list
-        for obstacle in map.get_obstacles():
+        #if this is a second dimension thing
+        if numDimensions == 2:
+            #gets the vertices list
+            obstacleList_2D = map.get_2D_obstacles()
 
-            #gets the object vertices
-            obstacleVertices = obstacle.getVertices_obstacle_3D_list()
+            for northList in obstacleList_2D:
+                for object in northList:
+                    
+                    #gets the vertices list of the object
+                    objectVertices = object.getVertices_building_2D_list()
 
-            obstacleMeshes, obstacleMeshColors = self.building_meshes_colors(vertices=obstacleVertices)
+                    currentMeshes, currentColors = self.building_vert_face(vertices=objectVertices)
 
-            #concatenates the full meshes and colors
-            fullMesh = np.concatenate((fullMesh, obstacleMeshes), axis=0)
-            fullMeshColors = np.concatenate((fullMeshColors, obstacleMeshColors), axis=0)
+                    #appends to the full mesh and colors list
+                    fullMesh = np.concatenate((fullMesh, currentMeshes), axis=0)
+                    fullMeshColors = np.concatenate((fullMeshColors, currentColors), axis=0)
+                    
+        elif numDimensions == 3:
+            #gets the obstacles list
+            obstacleList_3D = map.get_3D_obstacles()
+
+            for northList in obstacleList_3D:
+                for eastList in northList:
+                    for object in eastList:
+
+                        objectVertices = object.getVertices_obstacle_3D_list()
+
+                        currentMeshes, currentColors = self.building_vert_face(vertices=objectVertices)
+    
+                        #appends to the full mesh and colors list
+                        fullMesh = np.concatenate((fullMesh, currentMeshes), axis=0)
+                        fullMeshColors = np.concatenate((fullMeshColors, currentColors), axis=0)
+
 
         self.ground_mesh = gl.GLMeshItem(
             vertexes=fullMesh,  # defines the triangular mesh (Nx3x3)
@@ -41,10 +67,8 @@ class DrawMap:
         self.ground_mesh.setGLOptions('translucent')
         self.window.addItem(self.ground_mesh)
 
-
-    #the function to get the meshes and mesh colors of the building
-    def building_meshes_colors(self,
-                               vertices: list[np.ndarray]):
+    def building_vert_face(self,
+                           vertices: list[np.ndarray]):
         
 
         pts = []

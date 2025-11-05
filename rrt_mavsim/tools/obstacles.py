@@ -203,3 +203,27 @@ class RectangularObstacle:
     #defines the function to get the translation in the world frame
     def getTranslationWorld(self):
         return self.translation_world
+
+
+
+
+class CylindricalObstacle: 
+
+    #dimensisons 
+    def __init__(self,
+                 radius: float,
+                 objectHeight: float,
+                 translation_obsFrame: np.ndarray,
+                 rotation_obsToWorld: np.ndarray):
+        
+
+        self.radius = radius
+        self.objectHeight = objectHeight
+        self.translation_obsFrame = translation_obsFrame
+        self.rotation_obsToWorld = rotation_obsToWorld
+
+        #the translation in the world frame
+        self.translation_worldFrame = self.rotation_obsToWorld @ self.translation_obsFrame
+
+
+        
