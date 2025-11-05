@@ -10,12 +10,12 @@ mavsim_python
         7/13/2023 - RWB
 """
 import numpy as np
-from models.mav_dynamics import MavDynamics as MavDynamicsForces
+from rrt_mavsim.models.mav_dynamics import MavDynamics as MavDynamicsForces
 # load message types
 #from message_types.msg_state import MsgState
-from message_types.msg_delta import MsgDelta
-import parameters.aerosonde_parameters as MAV
-from tools.rotations import quaternion_to_rotation, quaternion_to_euler
+from rrt_mavsim.message_types.msg_delta import MsgDelta
+import rrt_mavsim.parameters.aerosonde_parameters as MAV
+from rrt_mavsim.tools.rotations import quaternion_to_rotation, quaternion_to_euler
 
 
 class MavDynamics(MavDynamicsForces):

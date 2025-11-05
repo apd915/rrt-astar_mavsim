@@ -1,7 +1,7 @@
-import parameters.planner_parameters as PLAN_PARAM
+import rrt_mavsim.parameters.planner_parameters as PLAN_PARAM
 import numpy as np
-from message_types.msg_bspline_conditions import MsgBsplineConditions
-from message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.message_types.msg_bspline_conditions import MsgBsplineConditions
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 
 
 #creates the Path Planner class

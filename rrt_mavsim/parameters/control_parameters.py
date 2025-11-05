@@ -1,6 +1,6 @@
 import numpy as np
 import models.model_coef as TF
-import parameters.aerosonde_parameters as MAV
+import rrt_mavsim.parameters.aerosonde_parameters as MAV
 
 gravity = MAV.gravity  # gravity constant
 rho = MAV.rho  # density of air

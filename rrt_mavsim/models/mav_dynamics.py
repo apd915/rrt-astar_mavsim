@@ -11,9 +11,9 @@ mavsim_python
         1/17/2024 - RWB
 """
 import numpy as np
-from message_types.msg_state import MsgState
-import parameters.aerosonde_parameters as MAV
-from tools.rotations import quaternion_to_rotation, quaternion_to_euler
+from rrt_mavsim.message_types.msg_state import MsgState
+import rrt_mavsim.parameters.aerosonde_parameters as MAV
+from rrt_mavsim.tools.rotations import quaternion_to_rotation, quaternion_to_euler
 
 class MavDynamics:
     def __init__(self, Ts: float):

@@ -1,5 +1,5 @@
-from message_types.msg_flight_corridors import MsgFlightCorridor
-from message_types.msg_waypoints import MsgWaypoints
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints
 import copy
 
 
