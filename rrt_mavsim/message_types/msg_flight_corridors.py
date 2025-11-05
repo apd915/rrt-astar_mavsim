@@ -2,6 +2,7 @@ import numpy as np
 import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PARAM
 from rrt_mavsim.tools.safeFlightCorridor import SFC
 from rrt_mavsim.tools.rotations import euler_to_rotation, euler_to_rotation_2D
+from rrt_mavsim.tools.plane_projections import map_2D_to_3D
 
 #A note on the following:
 #if this is a 2D flight corridor, the positions will be given in 2D,
@@ -161,6 +162,27 @@ class MsgFlightCorridor:
         
         return tempSFC
     
+
+    def getNormalsVertices_3D(self,
+                              n_hat: np.ndarray = None,
+                              p0: np.ndarray = None):
+        
+        if self.numDimensions == 2:
+            normals_2D, vertices_2D = self.sfc.getNormalsVertices()
+            #I am not dealing with this right now TODO
+            normals = normals_2D
+            vertices = []
+            for vertex_2D in vertices_2D:
+                vertex = map_2D_to_3D(pos_2D=vertex_2D,
+                                      n_hat=n_hat,
+                                      p0=p0)
+                vertices.append(vertex)
+
+        elif self.numDimensions == 3:
+            normals, vertices = self.sfc.getNormalsVertices()
+
+        return normals, vertices
+
     def getNumDimensions(self):
         return self.numDimensions
 

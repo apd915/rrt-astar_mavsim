@@ -24,9 +24,12 @@ def projectPosition_toPlane(pos_3D: np.ndarray, #the 3D position of the point (t
 #Q: the frame of the plane (3x2)
 #p0: the offset of the origin of the plane from the origin of the 3d map
 def map_2D_to_3D(pos_2D: np.ndarray,
-                 Q: np.ndarray,
+                 n_hat: np.ndarray,
                  p0: np.ndarray):
-    
+
+    #gets the Q matrix from n_hat
+    Q = getPlaneBasis(n_hat=n_hat)
+
     #multiplies it out to get the 3D position
     pos_3D = p0 + Q @ pos_2D
 

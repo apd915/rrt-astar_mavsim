@@ -25,7 +25,9 @@ class DrawWaypoints:
     def __init__(self,
                  waypoints: MsgWaypoints_SFC,
                  window: gl.GLViewWidget,
-                 lineColor: np.ndarray = red):
+                 lineColor: np.ndarray = red,
+                 n_hat: np.ndarray = None,
+                 p0: np.ndarray = None):
 
 
         #gets the dimension
@@ -33,6 +35,9 @@ class DrawWaypoints:
 
         #gets the list of SFCs
         flightCorridor_list = waypoints.getAllFlightCorridors()
+
+        self.n_hat = n_hat
+        self.p0 = p0
 
 
         for flightCorridor in flightCorridor_list:
@@ -56,7 +61,8 @@ class DrawWaypoints:
                    window: gl.GLViewWidget):
         
         #gets the sfc from the flight corridor
-        vertices_list = flightCorridor.getVertices()
+        normalsList, vertices_list = flightCorridor.getNormalsVertices_3D(n_hat=self.n_hat,
+                                                                          p0=self.p0)
 
         numVertices = len(vertices_list)
 
@@ -70,7 +76,7 @@ class DrawWaypoints:
             nextVertex_rotated = R @ nextVertex
 
             #gets the edge concatenateion
-            edge_concatenated = np.concatenate((currentVertex_rotated.T, nextVertex_rotated.T), axis=0)
+            edge_concatenated = np.concatenate((currentVertex.T, nextVertex.T), axis=0)
             
             #creates the lineplot item
             linePlot = gl.GLLinePlotItem(pos=edge_concatenated,
