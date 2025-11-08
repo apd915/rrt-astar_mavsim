@@ -36,6 +36,13 @@ class MsgFlightCorridor:
         self.startExtension_length = startExtension_length
         self.endExtension_length = endExtension_length
 
+
+
+        #gets the distance from the primary to the secondary position
+        self.primaryToSecondary_vec = self.secondaryPosition - self.primaryPosition
+        self.primaryToSecondary_distance = np.linalg.norm(self.primaryToSecondary_vec)
+        self.primaryToSecondary_unit = self.primaryToSecondary_vec / self.primaryToSecondary_distance
+
         self.__generateSFC()
 
 

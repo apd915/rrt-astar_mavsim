@@ -76,7 +76,7 @@ class DrawWaypoints:
             nextVertex_rotated = R @ nextVertex
 
             #gets the edge concatenateion
-            edge_concatenated = np.concatenate((currentVertex.T, nextVertex.T), axis=0)
+            edge_concatenated = np.concatenate((currentVertex_rotated.T, nextVertex_rotated.T), axis=0)
             
             #creates the lineplot item
             linePlot = gl.GLLinePlotItem(pos=edge_concatenated,

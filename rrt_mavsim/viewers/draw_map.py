@@ -4,6 +4,10 @@ from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
 from rrt_mavsim.tools.obstacles import RectangularObstacle
 
 
+R = np.array([[0, 1, 0], 
+              [1, 0, 0], 
+              [0, 0, -1]])
+
 class DrawMap:
 
     def __init__(self,
@@ -20,13 +24,37 @@ class DrawMap:
         fullMeshColors = np.array([], dtype=np.float32).reshape(0, 3, 4)
 
 
+        #plots the start mesh
+        startBlockVertices = [np.array([[-25],[-25],[-25]]),
+                              np.array([[25],[-25],[-25]]),
+                              np.array([[25],[25],[-25]]),
+                              np.array([[-25],[25],[-25]]),
+                              np.array([[-25],[-25],[25]]),
+                              np.array([[25],[-25],[25]]),
+                              np.array([[25],[25],[25]]),
+                              np.array([[-25],[25],[25]])]
+        
+        startBlockMeshes, startBlockMeshColors = self.building_meshes_colors(vertices=startBlockVertices, startBlock=True)
+        #concatenates the full meshes and colors
+        fullMesh = np.concatenate((fullMesh, startBlockMeshes), axis=0)
+        fullMeshColors = np.concatenate((fullMeshColors, startBlockMeshColors), axis=0)
+
+
         #iterates over all fo the obstacles in the list
         for obstacle in map.get_obstacles():
 
             #gets the object vertices
-            obstacleVertices = obstacle.getVertices_obstacle_3D_list()
+            obstacleVertices_unrotated = obstacle.getVertices_obstacle_3D_list()
 
-            obstacleMeshes, obstacleMeshColors = self.building_meshes_colors(vertices=obstacleVertices)
+            obstacleVertices_rotated = []
+
+            #rotates the positioning of the obstacle vertices so that down is up.
+            for obstacleVertex in obstacleVertices_unrotated:
+
+                rotatedVertex = R @ obstacleVertex
+                obstacleVertices_rotated.append(rotatedVertex)
+
+            obstacleMeshes, obstacleMeshColors = self.building_meshes_colors(vertices=obstacleVertices_rotated)
 
             #concatenates the full meshes and colors
             fullMesh = np.concatenate((fullMesh, obstacleMeshes), axis=0)
@@ -44,7 +72,8 @@ class DrawMap:
 
     #the function to get the meshes and mesh colors of the building
     def building_meshes_colors(self,
-                               vertices: list[np.ndarray]):
+                               vertices: list[np.ndarray],
+                               startBlock: bool = False):
         
 
         pts = []
@@ -73,18 +102,34 @@ class DrawMap:
         blue = np.array([0., 0., 1., 1])
         yellow = np.array([1., 1., 0., 1])
 
-        meshColors = np.empty((12, 3, 4), dtype=np.float32)
-        meshColors[0] = green
-        meshColors[1] = green
-        meshColors[2] = green
-        meshColors[3] = green
-        meshColors[4] = green
-        meshColors[5] = green
-        meshColors[6] = green
-        meshColors[7] = green
-        meshColors[8] = yellow
-        meshColors[9] = yellow
-        meshColors[10] = yellow
-        meshColors[11] = yellow
+
+        if startBlock:
+            meshColors = np.empty((12, 3, 4), dtype=np.float32)
+            meshColors[0] = red
+            meshColors[1] = red
+            meshColors[2] = red
+            meshColors[3] = red
+            meshColors[4] = red
+            meshColors[5] = red
+            meshColors[6] = red
+            meshColors[7] = red
+            meshColors[8] = red
+            meshColors[9] = red
+            meshColors[10] = red
+            meshColors[11] = red
+        else:
+            meshColors = np.empty((12, 3, 4), dtype=np.float32)
+            meshColors[0] = green
+            meshColors[1] = green
+            meshColors[2] = green
+            meshColors[3] = green
+            meshColors[4] = green
+            meshColors[5] = green
+            meshColors[6] = green
+            meshColors[7] = green
+            meshColors[8] = yellow
+            meshColors[9] = yellow
+            meshColors[10] = yellow
+            meshColors[11] = yellow
 
         return meshes, meshColors
