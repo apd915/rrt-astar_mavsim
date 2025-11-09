@@ -10,7 +10,7 @@ import numpy as np
 
 #this function smooths the paths, and does it a bit different than the original
 #algorithm. This checks for more combinations along the way.
-def flight_corridors_smooth_path_new(waypoints_not_smooth: MsgWaypoints_SFC,
+def flight_corridors_smooth_path(waypoints_not_smooth: MsgWaypoints_SFC,
                                      world_map: MsgWorldMap,
                                      angle_max: float)->MsgWaypoints_SFC:
     #gets the waypoints positions
@@ -93,7 +93,7 @@ def flight_corridors_smooth_path_new(waypoints_not_smooth: MsgWaypoints_SFC,
             #creates the flight Corridor list
             waypointsOutput = MsgWaypoints_SFC(numDimensions=world_map.numDimensions_algorithm)
             waypointsOutput.flightCorridors = outputFlightCorridor_list
-            waypointsOutput.positions=positionArray
+            waypointsOutput.positions = position_list
             #returns the path and the total cost
             return waypointsOutput
         #iterates over the all the feasible edges in the edges list for the current node index

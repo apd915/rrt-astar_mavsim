@@ -1,1 +1,63 @@
 #this file contains all of the functions to obtain a smooth B-Spline from the RRT SFC action
+
+import os, sys
+import numpy as np
+import cvxpy as cvp
+from scipy.optimize import minimize, Bounds, LinearConstraint, NonlinearConstraint, Bounds
+
+from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+from rrt_mavsim.tools.waypointsTools import getNumCntPts_list, getInitialFinalControlPoints, getNumCntPts
+import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PARAM
+from rrt_mavsim.tools.convexConstraints import get_overlapping_control_points_constraints
+
+from copy import deepcopy
+from enum import Enum
+ 
+class ObjectiveTypes(str, Enum):
+    MIN_DISTANCE = "Minimize Distance"
+    MIN_VELOCITY = "Minimize Velocity"
+    MIN_ACCELERATION = "Minimize Acceleration"
+
+
+
+
+class BSplineGenerator:
+
+
+    def __init__(self,
+                 numDimensions: int = 3,
+                 num_intervals_free_space: int = 5,
+                 degree: int = 3,
+                 M: int = 10,
+                 objective_type: ObjectiveTypes = ObjectiveTypes.MIN_DISTANCE):
+
+        self.numDimensions = numDimensions
+        self.num_intervals_free_space = num_intervals_free_space
+        self.degree = degree
+        self.M = M
+        self.objective_type = objective_type
+
+    def generatePath(self,
+                     waypoints: MsgWaypoints_SFC,
+                     numPointsPerUnit: float):
+        
+        #gets the list of number of control points
+        self.numControlPoints_list = getNumCntPts_list(waypoints=waypoints,
+                                                       numPointsPerUnit=numPointsPerUnit)
+        
+        #gets the total number of of control poins
+        self.numControlPoints = getNumCntPts(numCntPts_list=self.numControlPoints_list,
+                                             degree=self.degree)
+        
+        #gets the cvxpy variable
+        controlPoints_cpVar = cvp.Variable((self.numDimensions, self.numControlPoints))
+
+        #gets the constraints for the cp var variable
+
+        potato = 0
+
+
+
+    
+

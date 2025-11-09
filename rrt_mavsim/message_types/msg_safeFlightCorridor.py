@@ -18,7 +18,7 @@ edges_verticesIndices_3D = [[0,1], #pair 0
                             [5,6], #pair 10
                             [6,7]] #pair 11
 
-class SFC:
+class Msg_SFC:
 
     def __init__(self,
                  dimensions: np.ndarray,

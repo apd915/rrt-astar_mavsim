@@ -1,6 +1,6 @@
 import numpy as np
 import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PARAM
-from rrt_mavsim.tools.safeFlightCorridor import SFC
+from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
 from rrt_mavsim.tools.rotations import euler_to_rotation, euler_to_rotation_2D
 from rrt_mavsim.tools.plane_projections import map_2D_to_3D
 
@@ -98,7 +98,7 @@ class MsgFlightCorridor:
 
 
         #creates the sfc for this
-        tempSFC = SFC(dimensions=self.dimensions,
+        tempSFC = Msg_SFC(dimensions=self.dimensions,
                       translation=self.translation_SFC,
                       rotation=self.R_SFCToPlane_2D)
         
@@ -163,7 +163,7 @@ class MsgFlightCorridor:
 
         #now, with these things, we can create the safe flight corridor
 
-        tempSFC = SFC(dimensions=self.dimensions,
+        tempSFC = Msg_SFC(dimensions=self.dimensions,
                       translation=self.translation_SFC,
                       rotation=self.R_SFCToWorld)
         
@@ -189,6 +189,9 @@ class MsgFlightCorridor:
             normals, vertices = self.sfc.getNormalsVertices()
 
         return normals, vertices
+
+    def getDistancePrimaryToSecondary(self)->float:
+        return self.primaryToSecondary_distance
 
     def getNumDimensions(self):
         return self.numDimensions

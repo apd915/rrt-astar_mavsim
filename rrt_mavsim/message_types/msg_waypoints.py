@@ -58,7 +58,7 @@ class MsgWaypoints_SFC:
     def getAllPositions(self):
         return self.positions
         
-    def getAllFlightCorridors(self):
+    def getAllFlightCorridors(self)->list[MsgFlightCorridor]:
         return self.flightCorridors
     
 

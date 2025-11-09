@@ -1,7 +1,7 @@
 #creates the class to create obstacles
 import numpy as np
 import rrt_mavsim.parameters.planner_parameters as PLAN
-from rrt_mavsim.tools.safeFlightCorridor import SFC
+from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
 
 
 
@@ -31,7 +31,7 @@ class RectangularObstacle:
 
         self.building_height = building_height
 
-        self.SFC = SFC(dimensions=self.dimensions_obs,
+        self.SFC = Msg_SFC(dimensions=self.dimensions_obs,
                        translation=self.translation_obs,
                        rotation=self.rotation_obsToWorld)
 
