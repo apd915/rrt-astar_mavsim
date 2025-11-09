@@ -43,6 +43,9 @@ class MsgFlightCorridor:
         self.primaryToSecondary_distance = np.linalg.norm(self.primaryToSecondary_vec)
         self.primaryToSecondary_unit = self.primaryToSecondary_vec / self.primaryToSecondary_distance
 
+        #sets the flight corridor length
+        self.flightCorridorLength = self.primaryToSecondary_distance + startExtension_length + endExtension_length
+
         self.__generateSFC()
 
 
@@ -192,6 +195,9 @@ class MsgFlightCorridor:
 
     def getDistancePrimaryToSecondary(self)->float:
         return self.primaryToSecondary_distance
+    
+    def getFlightCorridorLength(self)->float:
+        return self.flightCorridorLength
 
     def getNumDimensions(self):
         return self.numDimensions

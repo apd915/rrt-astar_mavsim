@@ -6,11 +6,15 @@ from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 import time
 import numpy as np
 from eVTOL_BSplines.path_generation_helpers.staticFlightPath import staticFlightPath
+import rrt_mavsim.parameters.planner_parameters as PLAN
+import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PLAN
+
 
 #given a list of safe flight corridors, and the generally desired spacing between control points on that flight corridor,
 # we need a function that generates the list of number of allocated control points for each section of the spline.
 def getNumCntPts_list(waypoints: MsgWaypoints_SFC,
-                      numPointsPerUnit: float)->list[int]:
+                      numPointsPerUnit: float,
+                      degree: int = FLIGHT_PLAN.degree)->list[int]:
     
 
     #gets the sfc list
@@ -21,10 +25,15 @@ def getNumCntPts_list(waypoints: MsgWaypoints_SFC,
     for flightCorridor in flight_corridor_list:
 
         #gets the sfc length
-        flightCorridorLength = flightCorridor.getDistancePrimaryToSecondary()
+        flightCorridorLength = flightCorridor.getFlightCorridorLength()
 
         #gets the number of control points and adds 1 for good measure
-        numControlPoints_temp = int(flightCorridorLength*numPointsPerUnit) + 1
+        numControlPoints_temp = int(flightCorridorLength*numPointsPerUnit)
+
+        #if the number of control points is less than 2*degree, we make it 2*degree
+        if numControlPoints_temp < int(2*degree):
+
+            numControlPoints_temp = int(2*degree)
 
         #appends to the list
         numCntPts_list.append(numControlPoints_temp)

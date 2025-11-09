@@ -1,5 +1,6 @@
 import numpy as np
 from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
 
 class MsgWaypoints_SFC:
 
@@ -60,6 +61,17 @@ class MsgWaypoints_SFC:
         
     def getAllFlightCorridors(self)->list[MsgFlightCorridor]:
         return self.flightCorridors
+    
+
+    #gets the SFCs internal to each flight corridor as a list
+    def getAllSFCs(self)->list[Msg_SFC]:
+        sfc_list = []
+        for flightCorridor in self.flightCorridors:
+            tempSFC = flightCorridor.getSFC()
+            sfc_list.append(tempSFC)
+        
+        return sfc_list
+
     
 
     def getPosition(self,
