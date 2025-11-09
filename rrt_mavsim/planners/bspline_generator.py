@@ -71,11 +71,35 @@ class BSplineGenerator:
                                                                                startControlPoints=startControlPoints,
                                                                                endControlPoints=endControlPoints)
 
+        #gets the objective functions
+        if self.objective_type == ObjectiveTypes.MIN_DISTANCE:
+            objectiveFunction = self.objective_minimum_distance(controlPoints_cpVar=controlPoints_cpVar)
 
 
-        potato = 0
+
+        #section to solve the problem itself
+        problem = cvp.Problem(objective=objectiveFunction,
+                              constraints=controlPoints_constraints)
+
+        #calls the solver
+        problem.solve(solver=cvp.CLARABEL)
+
+        outputControlPoints = controlPoints_cpVar.value
+
+        return outputControlPoints
 
 
+    #defines the minimum distance objective function
+    def objective_minimum_distance(self,
+                                   controlPoints_cpVar: cvp.Variable):
+        
+        #gets the velocity control poitns
+        velocityControlPoints_cp = controlPoints_cpVar[:,0:-1] - controlPoints_cpVar[:,1:]
+
+        minimizeLength_objectiveFunction = cvp.Minimize(cvp.sum(cvp.norm(velocityControlPoints_cp, axis=1)))
+
+        #returns the objective
+        return minimizeLength_objectiveFunction
 
     
 
