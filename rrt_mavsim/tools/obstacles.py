@@ -205,6 +205,18 @@ class RectangularObstacle:
         return self.translation_world
 
 
+    #defines the function to get the inscribed Cylinder
+    #Arguments: 
+    #1. dimensionDiameter_index - the index of the dimension from the rectangular obstacle
+    #      which will become the diameter of the cylinder. (the circle will touch the edges of this dimension)
+    #2. dimensionAxis_index - the index the axis of the cylinder will be on
+    def getInscribedCylinder(self,
+                             dimensionDiameter_index: int,
+                             dimensionAxis_index: int):
+        
+        pass
+
+
 
 
 class CylindricalObstacle: 
