@@ -10,6 +10,7 @@ from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
 #with some specified altitude.
 
 
+
 class RectangularObstacle:
 
     #dimensions is the size of each dimension (length width height) in the Obstacle Frame of reference

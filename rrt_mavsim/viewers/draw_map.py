@@ -39,9 +39,18 @@ class DrawMap:
         fullMesh = np.concatenate((fullMesh, startBlockMeshes), axis=0)
         fullMeshColors = np.concatenate((fullMeshColors, startBlockMeshColors), axis=0)
 
+        self.obstaclePositionsList_unrotated = []
+        self.obstaclePositionsList_rotated = []
 
         #iterates over all fo the obstacles in the list
         for obstacle in map.get_obstacles():
+
+            #gets the obstacle positions
+            obstaclePosition = obstacle.getTranslationWorld()
+            self.obstaclePositionsList_unrotated.append(obstaclePosition)
+
+            rotatedObstaclePosition = R @ obstaclePosition
+            self.obstaclePositionsList_rotated.append(rotatedObstaclePosition)
 
             #gets the object vertices
             obstacleVertices_unrotated = obstacle.getVertices_obstacle_3D_list()
@@ -53,6 +62,8 @@ class DrawMap:
 
                 rotatedVertex = R @ obstacleVertex
                 obstacleVertices_rotated.append(rotatedVertex)
+
+                
 
             obstacleMeshes, obstacleMeshColors = self.building_meshes_colors(vertices=obstacleVertices_rotated)
 
