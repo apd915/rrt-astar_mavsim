@@ -66,11 +66,11 @@ class PlanarVTOLParams:
                                                                           p_0=self.mapOrigin_3D,
                                                                           n_hat=n_hat)
 
-        self.searchDimensions_2D_start = map_3D_to_2D(pos_3D=self.searchDimension_3D_projected_start,
+        self.searchDimensions_2D_start = map_3D_to_2D(vec_3D=self.searchDimension_3D_projected_start,
                                                  n_hat=n_hat,
                                                  p0=self.mapOrigin_3D)
         
-        self.searchdimensions_2D_end = map_3D_to_2D(pos_3D=self.searchDimension_3D_projected_end,
+        self.searchdimensions_2D_end = map_3D_to_2D(vec_3D=self.searchDimension_3D_projected_end,
                                                n_hat=n_hat,
                                                p0=self.mapOrigin_3D)
         

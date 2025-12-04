@@ -183,7 +183,7 @@ class MsgFlightCorridor:
             normals = normals_2D
             vertices = []
             for vertex_2D in vertices_2D:
-                vertex = map_2D_to_3D(pos_2D=vertex_2D,
+                vertex = map_2D_to_3D(vec_2D=vertex_2D,
                                       n_hat=n_hat,
                                       p0=p0)
                 vertices.append(vertex)
