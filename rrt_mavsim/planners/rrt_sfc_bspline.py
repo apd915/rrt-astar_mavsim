@@ -11,9 +11,12 @@ import time
 import scipy as sp
 from rrt_mavsim.tools.intersections import intersectionOccurred_Matrix, intersectionDetected
 from rrt_mavsim.tools.pathOptimization import findMinimumPath
-from rrt_mavsim.tools.plane_projections import projectPosition_toPlane, map_2D_to_3D, map_3D_to_2D
+from rrt_mavsim.tools.plane_projections import projectPositionToPlane_planeMsg, map_2D_to_3D, map_3D_to_2D_planeMsg
+from rrt_mavsim.planners.bspline_generator import BSplineGenerator
 import heapq
+from rrt_mavsim.message_types.msg_plane import MsgPlane
 
+from rrt_mavsim.tools.smoothingTools import *
 
 class RRT_SFC_BSpline:
 
@@ -21,34 +24,39 @@ class RRT_SFC_BSpline:
     #creates the init function
     def __init__(self,
                  numDimensions: int,
+                 degree: int,
                  M: int,
                  Va: float,
                  rho: np.ndarray,
                  step_length: float,
                  numDesiredInitPaths: int,
-                 n_hat: np.ndarray = None,#the normal vector for the working plane (if )
-                 p0: np.ndarray = None):
+                 plane: MsgPlane):
         
         #saves all of them
         self.numDimensions = numDimensions
+        self.degree = degree
         self.M = M
         self.Va = Va
         self.rho = rho
         self.stepLength = step_length
         self.numDesiredInitPaths = numDesiredInitPaths
 
-        self.n_hat = n_hat
-        self.p0 = p0
+        self.plane = plane
 
         #creates the B-Splines
         self.bsplineParam = BsplineParameters()
 
+        #initializes the waypoints smooth and not smooth
+        self.waypoints_not_smooth = None
+        self.waypoints_smooth = None
 
-    def generatePaths(self,
-                      startPosition_3D: np.ndarray,
-                      endPosition_3D: np.ndarray,
-                      worldMap: MsgWorldMap,
-                      segmentLength: float):
+
+
+    def generateSFCPaths(self,
+                         startPosition_3D: np.ndarray,
+                         endPosition_3D: np.ndarray,
+                         worldMap: MsgWorldMap,
+                         segmentLength: float):
         
         self.startPosition_3D = startPosition_3D
         self.endPosition_3D = endPosition_3D
@@ -62,11 +70,24 @@ class RRT_SFC_BSpline:
         #saves the changes and the updates to the tree
         if self.numDimensions == 2:
 
-            self.__generatePaths_2D()
+            return self.__generatePaths_2D()
 
         elif self.numDimensions == 3:
 
-            self.__generatePaths_3D()
+            return self.__generatePaths_3D()
+
+    def generateControlPoints(self,
+                        waypoints: MsgWaypoints_SFC,
+                        numPointsPerUnit: int):
+        
+        self.bsplineGen = BSplineGenerator(numDimensions=self.numDimensions,
+                                           degree=self.degree,
+                                           M=self.M)
+        
+        outputControlPoints = self.bsplineGen.generatePath(waypoints=waypoints,
+                                                           numPointsPerUnit=numPointsPerUnit)
+        
+        return outputControlPoints
 
 
     #creates the version for 2D
@@ -74,24 +95,18 @@ class RRT_SFC_BSpline:
 
         #gets the projected start and end positions.
         #that is, they are still in 3D, but they represent the 3D position
-        #that will need to be projected onto the workplane
-        startPosition_3D_projected = projectPosition_toPlane(pos_3D=self.startPosition_3D,
-                                                     p_0=self.p0,
-                                                     n_hat=self.n_hat)
-        
-        endPosition_3D_projected = projectPosition_toPlane(pos_3D=self.endPosition_3D,
-                                                   p_0=self.p0,
-                                                   n_hat=self.n_hat)
-        
+        #that will need to be projected onto the workplane  
+        startPosition_3D_projected = projectPositionToPlane_planeMsg(pos_3D=self.startPosition_3D,
+                                                                     plane_msg=self.plane)
+        endPosition_3D_projected = projectPositionToPlane_planeMsg(pos_3D=self.endPosition_3D,
+                                                                     plane_msg=self.plane)
         
         #gets the start position 2D and same for the end position
-        startPosition_2D = map_3D_to_2D(pos_3D=startPosition_3D_projected,
-                                        n_hat=self.n_hat,
-                                        p0=self.p0)
+        startPosition_2D = map_3D_to_2D_planeMsg(vec_3D=startPosition_3D_projected,
+                                                 plane_msg=self.plane)
         
-        endPosition_2D = map_3D_to_2D(pos_3D=endPosition_3D_projected,
-                                      n_hat=self.n_hat,
-                                      p0=self.p0)
+        endPosition_2D = map_3D_to_2D_planeMsg(vec_3D=endPosition_3D_projected,
+                                               plane_msg=self.plane)
         #
         #adds the projected start position
         self.tree.add(position=startPosition_2D,
@@ -221,8 +236,20 @@ class RRT_SFC_BSpline:
         
         return connectedToEnd
     
-    def getWaypointsNotSmooth(self):
+    def getWaypointsNotSmooth(self)->MsgWaypoints_SFC:
         return self.waypoints_not_smooth
+    
+    def getWaypointsSmooth(self)->MsgWaypoints_SFC:
+        return self.waypoints_smooth
+    
+    def setWaypointsNotSmooth(self,
+                              waypoints_not_smooth: MsgWaypoints_SFC):
+        self.waypoints_not_smooth = waypoints_not_smooth
+    
+    def setWaypointsSmooth(self,
+                           waypoints_smooth: MsgWaypoints_SFC):
+        
+        self.waypoints_smooth = waypoints_smooth
 
 
 

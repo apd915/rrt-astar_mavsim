@@ -1,3 +1,4 @@
+#implements the optimization function 
 
 import os, sys
 
@@ -31,6 +32,7 @@ params = PlanarVTOLParams(mapOrigin_2D=mapOrigin_2D,
 startPosition = params.startPosition
 endPosition = params.endPosition
 
+
 worldMap = MsgWorldMap(obstacleFieldType=MapTypes.PLANAR_VTOL,
                        numDimensions_algorithm=numDimensions,
                        planarVTOL_Params=params)
@@ -46,15 +48,13 @@ planner = RRT_SFC_BSpline(numDimensions=numDimensions,
                           p0=mapOrigin_3D)
 
 
-planner.generateSFCPaths(startPosition_3D=startPosition,
+planner.generatePath(startPosition_3D=startPosition,
                       endPosition_3D=endPosition,
                       worldMap=worldMap,
                       segmentLength=FLIGHT_PLAN.segmentLength)
 
 
-#gets the not smooth waypoints
-waypointsNotSmooth = planner.getWaypointsNotSmooth()
 
 
 
-potato = 0
+tomato = 0

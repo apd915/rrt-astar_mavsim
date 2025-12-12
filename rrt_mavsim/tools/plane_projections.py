@@ -19,6 +19,26 @@ def projectPosition_toPlane(pos_3D: np.ndarray, #the 3D position of the point (t
     #returns the projected vector
     return vec_proj
 
+#same thing as the above but with a plane message class
+def projectPositionToPlane_planeMsg(pos_3D: np.ndarray,
+                                    plane_msg: MsgPlane):
+    
+    #gets the origin
+    p_0 = plane_msg.origin_3D
+    n_hat = plane_msg.n_hat
+
+    #gets the vector from p0 to pos_3D
+    vec_p0_to_point = pos_3D - p_0
+
+    dotProduct = np.dot(a=vec_p0_to_point.flatten(), b=n_hat.flatten())
+    #now that this is relative to the origin, gets the projection onto the n_hat
+    n_hat_proj = (dotProduct/(np.linalg.norm(n_hat)**2))*n_hat
+    #gets the projection onto the plane, which is the vector minus the n_hat projection
+    vec_proj = vec_p0_to_point - n_hat_proj
+    #returns the projected vector
+    return vec_proj
+
+
 
 #defines the function to map from 2D to 3D
 #pos_2D: the position given in the frame of the plane (2x1)

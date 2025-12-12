@@ -2,6 +2,9 @@
 import numpy as np
 import rrt_mavsim.parameters.planner_parameters as PLAN
 from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
+from rrt_mavsim.message_types.msg_plane import MsgPlane
+from rrt_mavsim.tools.plane_projections import *
+from eVTOL_BSplines.submodules.path_generator.path_generation.obstacle import Obstacle
 
 
 
@@ -204,6 +207,8 @@ class RectangularObstacle:
     #defines the function to get the translation in the world frame
     def getTranslationWorld(self):
         return self.translation_world
+    
+
 
 
     #defines the function to get the inscribed Cylinder
@@ -215,7 +220,45 @@ class RectangularObstacle:
                              dimensionDiameter_index: int,
                              dimensionAxis_index: int):
         
+
+
         pass
+
+    #defines the function to get the circular obstacle object from the rectangular obstacle
+    #arguments:
+    #dimensionDiameter_index: which dimension index will be used to set the diameter of the circle
+    #dimensionAxis_index: which dimension index will be used to set the axis it will be aligned to
+    def getCircularObstacle(self,
+                            plane_msg: MsgPlane):
+        
+        #gets the center position of the circular obstacle in the world frame
+        translation_world_3D = self.getTranslationWorld()
+
+        #gets the projected position onto the plane, but still in 3 dimensions
+        translation_world_3D_projected = projectPositionToPlane_planeMsg(pos_3D=translation_world_3D,
+                                                                         plane_msg=plane_msg)
+        
+        #gets the translation in the world 2D projected
+        translation_world_2D = map_3D_to_2D_planeMsg(vec_3D=translation_world_3D_projected,
+                                                     plane_msg=plane_msg)
+        
+
+        #gets the two applicable dimensions
+        n_size = self.dimensions_obs.item(1)
+        a_size = self.dimensions_obs.item(2)
+
+        #gets the smaller value
+        minimumDimension = min(n_size, a_size)
+
+        #gets the radius
+        radius = minimumDimension/2.0
+
+        #now, with the information we create the circular obstacle
+        circularObstacle = Obstacle(center=translation_world_2D,
+                                    radius=radius)
+
+        return circularObstacle
+        
 
 
 

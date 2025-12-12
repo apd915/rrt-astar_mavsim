@@ -141,6 +141,10 @@ def flight_corridors_smooth_path(waypoints_not_smooth: MsgWaypoints_SFC,
     potato = 0
 
 
+
+
+
+
 #defines the function to find the angle between two safe flight corridors
 def getSFCAngle_magnitude(sfc_1: MsgFlightCorridor,
                           sfc_2: MsgFlightCorridor):
