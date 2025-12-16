@@ -1,99 +1,841 @@
-#in this file, I attempt to implement wrapping david christensen's code in 
-#this file and making it accessable to the kind of classes and obstacles, etc 
-#that I am used to working with
-from eVTOL_BSplines.submodules.path_generator.path_generation.path_generator import PathGenerator
 
+
+
+"""
+This module generates a 3rd order B-spline path between two waypoints,
+waypoint directions, curvature constraint, and adjoining 
+safe flight corridors.
+"""
+import os
+import numpy as np
+from scipy.optimize import minimize, Bounds, LinearConstraint, NonlinearConstraint, Bounds
+from eVTOL_BSplines.submodules.path_generator.path_generation.matrix_evaluation import get_M_matrix, evaluate_point_on_interval
 from eVTOL_BSplines.submodules.path_generator.PathObjectivesAndConstraints.python_wrappers.objective_functions import ObjectiveFunctions
 from eVTOL_BSplines.submodules.path_generator.PathObjectivesAndConstraints.python_wrappers.curvature_constraints import CurvatureConstraints
 from eVTOL_BSplines.submodules.path_generator.PathObjectivesAndConstraints.python_wrappers.obstacle_constraints import ObstacleConstraints
 from eVTOL_BSplines.submodules.path_generator.PathObjectivesAndConstraints.python_wrappers.incline_constraints import InclineConstraints
 from eVTOL_BSplines.submodules.path_generator.PathObjectivesAndConstraints.python_wrappers.waypoint_constraints import WaypointConstraints
-from eVTOL_BSplines.submodules.path_generator.path_generation.waypoint_data import Waypoint, WaypointData
+from bsplinegenerator.bspline_to_minvo import get_composite_bspline_to_minvo_conversion_matrix
+from eVTOL_BSplines.submodules.path_generator.path_generation.safe_flight_corridor import SFC_Data, SFC
 from eVTOL_BSplines.submodules.path_generator.path_generation.obstacle import Obstacle
+from eVTOL_BSplines.submodules.path_generator.path_generation.waypoint_data import Waypoint, WaypointData
+import time
 
 from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
-from rrt_mavsim.tools.obstacle_conversions import *
 from rrt_mavsim.message_types.msg_plane import MsgPlane
-import numpy as np
-
-from scipy.optimize import minimize, NonlinearConstraint
-
-
+from rrt_mavsim.tools.obstacle_conversions import worldMap_rectToCircle_conversion
 
 class PathOptimizer:
+    """
+    This class generates a 3rd order B-spline path between two waypoints,
+    waypoint directions, curvature constraint, and adjoining 
+    safe flight corridors.
+    """
 
+    ### TODO ####
+    # 1. remove the scale factor constraint
+    # 2. add checks to make sure constraints are feasible with eachother
+    # 3. Change obstacle constraints to check only intervals that have an obstacle in the same SFC
+    # 4. add constraints to reach intermediate waypoints between start and end waypoint.
 
-    def __init__(self,
-                 numDimensions: int,
-                 world_map: MsgWorldMap,
-                 plane: MsgPlane,
-                 num_intervals_free_space: int = 5,
-                 degree: int = 3):
+    def __init__(self, 
+                 dimension: int, 
+                 degree: int = 3,
+                 num_intervals_free_space: int = 5):
         
-        self.numDimensions = numDimensions
-        self.num_intervals_free_space = num_intervals_free_space
-        self.degree = degree
 
+        self._dimension = dimension
+        self._order = degree
+        self._M = get_M_matrix(self._order)
+        self._objective_func_obj = ObjectiveFunctions(self._dimension)
+        self._curvature_const_obj = CurvatureConstraints(self._dimension)
+        self._waypoint_const_obj = WaypointConstraints(self._dimension)
+        self._obstacle_cons_obj = ObstacleConstraints(self._dimension)
+        self._num_intervals_free_space = num_intervals_free_space
+        if dimension == 3:
+            self._incline_const_obj = InclineConstraints()
+        
+    def generate_path(self, 
+                      waypoint_data: WaypointData,
+                      world_map: MsgWorldMap,
+                      plane: MsgPlane,
+                      controlPoints_init: np.ndarray,
+                      max_curvature: np.float64 = None,
+                      max_incline: np.float64 = None, 
+                      sfc_data: SFC_Data = None, 
+                      objective_function_type: str = "minimal_velocity_path", 
+                      obstacle_type = "circular"):
+        
         self.world_map = world_map
+        self.plane = plane
 
-        #gets the circular obstacle list
-        self.obstacles_circular = worldMap_rectToCircle_conversion(worldMap=self.world_map,
-                                                                   plane=plane)
+        #gets the start and end control points
+        startControlPoints = controlPoints_init[:,:self._order]
+        endControlPoints = controlPoints_init[:,(-self._order):]
 
-        #creates the obstacle constraints object
-        self.obstacles_constraints_object = ObstacleConstraints(dimension=self.numDimensions)
+        #obtains the circular objects which are inscribed within the rectangular obstacles
+        self.circular_obstacles = worldMap_rectToCircle_conversion(worldMap=self.world_map,
+                                                                   plane=self.plane)
         
 
-        potato = 0
+        #gets the number of control points
+        numControlPoints = (np.shape(controlPoints_init))[1]
 
+        num_intermediate_waypoints = waypoint_data.get_num_intermediate_waypoints()
+        point_sequence = self.__get_point_sequence(waypoint_data, sfc_data)
+        constraints = self.__get_constraints(num_cont_pts=numControlPoints,
+                                             waypoint_data=waypoint_data,
+                                             max_curvature=max_curvature,
+                                             max_incline=max_incline,
+                                             sfc_data=sfc_data,
+                                             obstacles=self.circular_obstacles,
+                                             num_intermediate_waypoints=num_intermediate_waypoints,
+                                             obstacle_type=obstacle_type)
 
-    #defines the function to optimize the spline from the circular obstacles constraints
+        objectiveFunction = self.__get_objective_function(objective_function_type=objective_function_type)
+        objective_variable_bounds = self.__create_objective_variable_bounds(num_cont_pts=numControlPoints,
+                                                                              start_cont_pts=startControlPoints,
+                                                                              end_cont_pts=endControlPoints)
 
-    def generate_path(self,
-                      controlPoints_RRTOutput: np.ndarray,
-                      startPosition: np.ndarray,
-                      endPosition: np.ndarray):
+        #gets the flattened initial control points
+        controlPoints_init_flattened = controlPoints_init.flatten()
         
-        #converts from start and end conditions to start and end waypoints
-        startWaypoint = Waypoint(location=startPosition)
+        # if you want speed over performance, set these options.
+        minimize_options = {'disp': False}
+        # if want performance over speed set these options
+        '''
+        minimize_options = {'disp': False, 'maxiter' : 1000000000, 
+                            'ftol' : 0.0000000000000001, 'finite_diff_rel_step':0.000000000000000001}
+        #'''
+        # perform optimization
+        result = minimize(
+            objectiveFunction,
+            x0=controlPoints_init_flattened,
+            args=(numControlPoints,),
+            method='SLSQP', 
+            bounds=objective_variable_bounds,
+            constraints=constraints, 
+            options = minimize_options)
+        optimized_control_points = np.reshape(result.x[0:numControlPoints*self._dimension] ,(self._dimension,numControlPoints))
+        return optimized_control_points, result.status
+    
+    #defines the function to generate a path with preset control points (ones which should be reasonably close to the optimal ones)
+    def generate_path_precalculatedCtr(self,
+                                       numIntervalsOfInterestPerCorridor: int,
+                                       initialControlPoints: np.ndarray,
+                                       sfc_data: SFC_Data = None,
+                                       objective_function_type: str = "minimal_velocity_path_precomputed"):
         
-        endWaypoint = Waypoint(location=endPosition)
+        #gets the total number of control points from the array
+        numControlPoints = getNumCtrPts_array(controlPoints=initialControlPoints)
+        #gets the number of central control points
+        numVariableControlPoints = numControlPoints - 2*self._order
 
-        #creates the waypoint data
-        waypoints = WaypointData(start_waypoint=startWaypoint,
-                                 end_waypoint=endWaypoint)
+        #Remember that we want the first and last points of the spline to stay the same,
+        #so therefore, we do not modify the first d and last d control points, but we allow all others to be modified
+        #so as to work within this framework
+        initialStartControlPoints,\
+            initialCentralControlPoints,\
+            initialEndControlPoints = getPartitionedControlPoints_initial(initialControlPoints=initialControlPoints,
+                                                                          degree=self._order)
+
+
+        #gets the flattened central control control points initial
+        initialCentralControlPoints_flattened = initialCentralControlPoints.flatten()
+
+        #gets the safe flight corridor constraints
+        constraints = self.__get_constraints_directContPts(numVariableContPts=numVariableControlPoints,
+                                                           sfc_data=sfc_data,
+                                                           numIntervalsOfInterestPerCorridor=numIntervalsOfInterestPerCorridor)
         
-        #gets the starting and endind d control points (which need to stay fixed)
+        #defines the function to get the objective Function
+        objectiveFunction = self.__get_objective_function(objective_function_type=objective_function_type)
 
-        startControlPoints_init = controlPoints_RRTOutput[:,:self.degree]
-        endControlPoints_init = controlPoints_RRTOutput[:,(-self.degree):]
-
-        #and the central partitions
-        variableControlPoints_init = controlPoints_RRTOutput[:,self.degree:(-self.degree)]
-
-        self.__create_constraints(obstacles_list=self.obstacles_circular)
-
-
-        potato = 0
-
-
-    #wrapper function to create all the constraints
-    def __create_constraints(self,
-                             obstacles_list: list[Obstacle]):
+        objective_variable_bounds = self.__create_objective_variable_bounds_ctrlPts(num_cont_pts=numVariableControlPoints)
         
-        if obstacles_list is not None:
+        # if you want speed over performance, set these options.
+        minimize_options = {'disp': False}
 
-            circularObstacleConstraints =\
-                  self.__create_circular_obstacle_constraints(obstacles_list=obstacles_list)
+        #performs the optimization
+        result = minimize(fun=objectiveFunction,
+                          x0=initialCentralControlPoints_flattened,
+                          args=(initialStartControlPoints, initialEndControlPoints, numVariableControlPoints),
+                          method='SLSQP',
+                          bounds=objective_variable_bounds,
+                          constraints=constraints,
+                          options=minimize_options)
+        
+        #returns the optimized control points
+        optimizedVariable_control_points = np.reshape(result.x, (self._dimension, numVariableControlPoints))
+
+        #concatenates together all the control points
+        optimized_control_points = np.concatenate((initialStartControlPoints, optimizedVariable_control_points, initialEndControlPoints), axis=1)
+
+        #gets the initial start and 
+        return optimized_control_points, result.status
 
 
-    #creates the constraints for the obstacles which are scipy Nonlinear constraints
-    def __create_circular_obstacle_constraints(self,
-                                               obstacles_list: list[Obstacle]):
+
+    def set_num_intervals_free_space(self, num):
+        self._num_intervals_free_space = num
+    
+    def __get_objective_function(self, objective_function_type):
+        if objective_function_type == "minimal_distance_path":
+            return self.__minimize_velocity_control_points_objective_function
+        elif objective_function_type == "minimal_velocity_path":
+            return self.__minimize_acceleration_control_points_objective_function
+        elif objective_function_type == "minimal_acceleration_path":
+            return self.__minimize_jerk_control_points_objective_function
+        elif objective_function_type == "minimal_velocity_path_precomputed":
+            return self.__minimize_velocity_control_points_objective_function_precomputed
+        else:
+            raise Exception("Error, Invalid objective function type")
+
+    def __get_num_intervals(self, sfc_data: SFC_Data):
+        num_intervals = self._num_intervals_free_space
+        if sfc_data is not None:
+            num_intervals = sfc_data.get_num_intervals()
+        return num_intervals
+        
+    def __get_point_sequence(self, waypoint_data:WaypointData, sfc_data:SFC_Data = None):
+        if sfc_data is None:
+            point_sequence = waypoint_data.get_waypoint_locations()
+            return point_sequence
+        else:
+            return sfc_data.get_point_sequence()
+    
+    def __create_initial_objective_variables(self, num_cont_pts, point_sequence, num_intermediate_waypoints,  waypoint_sequence):
+        control_points = self.__create_initial_control_points(num_cont_pts, point_sequence)
+        start_waypoint_scalar = 1
+        final_waypoint_scalar = 1
+        num_intervals = num_cont_pts - self._order
+        variables = np.concatenate((control_points.flatten(),
+            [start_waypoint_scalar, final_waypoint_scalar]))
+        if (num_intermediate_waypoints > 0):
+            intermediate_waypoint_times = self.__create_intermediate_waypoint_times(waypoint_sequence, num_cont_pts)
+            variables = np.concatenate((variables, intermediate_waypoint_times))
+        return variables
+        
+    def __get_objective_variables(self, variables, num_cont_pts):
+        control_points = np.reshape(variables[0:num_cont_pts*self._dimension], \
+                    (self._dimension,num_cont_pts))
+        return control_points
+    
+    def __get_objective_waypoint_scalars(self, variables, num_cont_pts):
+        return variables[num_cont_pts*self._dimension], variables[num_cont_pts*self._dimension+1]
+    
+    def __get_intermediate_waypoint_times(self, variables, num_middle_waypoints):
+        intermediate_waypoint_times = variables[-num_middle_waypoints:]
+        return intermediate_waypoint_times
+
+    def __get_constraints(self, 
+                          num_cont_pts: int, 
+                          waypoint_data: WaypointData, 
+                          max_curvature: np.float64, 
+                          max_incline: np.float64, 
+                          sfc_data: SFC_Data, 
+                          obstacles: list, 
+                          num_intermediate_waypoints: int, 
+                          obstacle_type: str):
+
+        constraints = []
+        if (obstacles != None):
+            obstacle_constraint = self.__create_obstacle_constraints(obstacles, num_cont_pts, obstacle_type)
+            constraints.append(obstacle_constraint)
+           
+        return tuple(constraints)
+    
+
+    #defines the function to get constraints for the control point only modifiers
+    def __get_constraints_directContPts(self,
+                                       numVariableContPts: int,
+                                       sfc_data: SFC_Data,
+                                       numIntervalsOfInterestPerCorridor: int):
+        #creates the constraints variable
+        constraints = []
+        if sfc_data is not None:
+            sfc_constraints = self.__create_safe_flight_corridor_constraint_precomputed(sfc_data=sfc_data,
+                                                                                        num_variable_control_pts=numVariableContPts,
+                                                                                        numIntervalsOfInterestPerCorridor=numIntervalsOfInterestPerCorridor)
+            constraints.append(sfc_constraints)
+
+        #returns the constraints
+        return tuple(constraints)
+
+    #creates the objective variable bounds
+    def __create_objective_variable_bounds(self,
+                                           num_cont_pts: int,
+                                           start_cont_pts: np.ndarray,
+                                           end_cont_pts: np.ndarray):
+        
+        #the shape of the start and end control points is (numDimxdegree) each
+        #they provide a point on which we must stay to maintain the objective bounds
+        
+        #gets the total length of the control points variable, which is numControlPoitns times dimension
+        totalLength = num_cont_pts*self._dimension
+        #creates the initial lower and upper bound vectors
+        lower_bounds = np.zeros(totalLength) - np.inf
+        upper_bounds = np.zeros(totalLength) + np.inf
+
+        #partitions the start and end control points into upper and lower parts
+        start_cont_pts_north = start_cont_pts[0,:]
+        start_cont_pts_altitude = start_cont_pts[1,:]
+
+        end_cont_pts_north = end_cont_pts[0,:]
+        end_cont_pts_altitude = end_cont_pts[1,:]
+
+        #sets the parts for the lower and upper bounds for the four control points subsections
+        lower_bounds[:self._order] = start_cont_pts_north
+        upper_bounds[:self._order] = start_cont_pts_north
+
+        lower_bounds[(num_cont_pts-self._order):num_cont_pts] = end_cont_pts_north
+        upper_bounds[(num_cont_pts-self._order):num_cont_pts] = end_cont_pts_north
+
+        lower_bounds[num_cont_pts:(num_cont_pts+self._order)] = start_cont_pts_altitude
+        upper_bounds[num_cont_pts:(num_cont_pts+self._order)] = start_cont_pts_altitude
+
+        lower_bounds[(-self._order):] = end_cont_pts_altitude
+        upper_bounds[(-self._order):] = end_cont_pts_altitude
+
+        return Bounds(lb=lower_bounds, ub=upper_bounds)
+
+    
+    #defines the function to create objective variable bounds without the waypoints
+    def __create_objective_variable_bounds_ctrlPts(self,
+                                                   num_cont_pts: int):
+        lower_bounds = np.zeros(num_cont_pts*self._dimension) - np.inf
+        upper_bounds = np.zeros(num_cont_pts*self._dimension) + np.inf
+        return Bounds(lb=lower_bounds, ub=upper_bounds)
+
+    def __minimize_jerk_control_points_objective_function(self, variables, num_cont_pts):
+        # for third order splines only
+        control_points = self.__get_objective_variables(variables, num_cont_pts)
+        jerk_cps = control_points[:,3:] - 3*control_points[:,2:-1] + 3*control_points[:,1:-2] - control_points[:,0:-3]
+        square_jerk_control_points = np.sum(jerk_cps**2,0)
+        objective = np.sum(square_jerk_control_points)
+        return objective
+    
+    def __minimize_velocity_control_points_objective_function(self, variables, num_cont_pts):
+        # for third order splines only
+        control_points = self.__get_objective_variables(variables, num_cont_pts)
+        velocity_cps =  control_points[:,0:-1] - control_points[:,1:]
+        velocity_control_points_squared_sum = np.sum(velocity_cps**2,0)
+        objective = np.sum(velocity_control_points_squared_sum)
+        return objective
+    
+    def __minimize_acceleration_control_points_objective_function(self, variables, num_cont_pts):
+        # for third order splines only
+        control_points = self.__get_objective_variables(variables, num_cont_pts)
+        acceleration_cps =  control_points[:,2:] - 2*control_points[:,1:-1] + control_points[:,0:-2]
+        accel_control_points_squared_sum = np.sum(acceleration_cps**2,0)
+        objective = np.sum(accel_control_points_squared_sum)
+        return objective
+    
+    def __minimize_velocity_control_points_objective_function_precomputed(self, 
+                                                                          centralControlPoints_flattened: np.ndarray,
+                                                                          startControlPoints: np.ndarray,
+                                                                          endControlPoints: np.ndarray,
+                                                                          numCenterControlPoints: int):
+        
+        #we take the variable vector (which is the thing being modified by the optimizer)
+        #and then we turn it back into a useable form
+        completeControlPoints = reconstructFlattenedControlPoints(startControlPoints=startControlPoints,
+                                                                  flattenedCenterControlPoints=centralControlPoints_flattened,
+                                                                  endControlPoints=endControlPoints,
+                                                                  numCenterControlPoints=numCenterControlPoints,
+                                                                  dimension=self._dimension)
+
+        #now that we have the complete control points, let us manipulate them into something useful
+        #for now, we'll do it like it's already being done above
+        #gets the velocity control points
+
+        velocity_cps = completeControlPoints[:,0:-1] - completeControlPoints[:,1:]
+        #gets the sum along each vector
+        velocity_control_points_squared_sum = np.sum(velocity_cps,
+                                                     axis=0)
+
+        #gets the sum of all the magnitudes as the objective
+        objective = np.sum(velocity_control_points_squared_sum)
+        
+        #and then returns the objective
+        return objective
+
+
+
+    def __create_waypoint_constraint(self, waypoints, num_cont_pts, num_intermediate_waypoints):
+        num_waypoints = 2
+        num_extra_spaces = 2 + num_intermediate_waypoints
+        m = num_waypoints
+        n = num_cont_pts
+        k = self._order
+        d = self._dimension
+        constraint_matrix = np.zeros((m*d,n*d))
+        Gamma_0 = np.zeros((self._order+1,1))
+        Gamma_0[self._order,0] = 1
+        Gamma_f = np.ones((self._order+1,1))
+        M_Gamma_0_T = np.dot(self._M,Gamma_0).T
+        M_Gamma_f_T = np.dot(self._M,Gamma_f).T
+        for i in range(self._dimension):
+            constraint_matrix[i*m   ,  i*n        : i*n+k+1] = M_Gamma_0_T
+            constraint_matrix[i*m+1 , (i+1)*n-k-1 : (i+1)*n] = M_Gamma_f_T
+        constraint_matrix = np.concatenate((constraint_matrix,np.zeros((m*d,num_extra_spaces))),1)
+        constraint = LinearConstraint(constraint_matrix, lb=waypoints.flatten(), ub=waypoints.flatten())
+        return constraint
+    
+    def evaluate_waypoint_constraint(self, waypoints, control_points):
+        num_cont_pts = np.shape(control_points)[1]
+        num_waypoints = 2
+        m = num_waypoints
+        n = num_cont_pts
+        k = self._order
+        d = self._dimension
+        constraint_matrix = np.zeros((m*d,n*d))
+        Gamma_0 = np.zeros((self._order+1,1))
+        Gamma_0[self._order,0] = 1
+        Gamma_f = np.ones((self._order+1,1))
+        M_Gamma_0_T = np.dot(self._M,Gamma_0).T
+        M_Gamma_f_T = np.dot(self._M,Gamma_f).T
+        for i in range(self._dimension):
+            constraint_matrix[i*m   ,  i*n        : i*n+k+1] = M_Gamma_0_T
+            constraint_matrix[i*m+1 , (i+1)*n-k-1 : (i+1)*n] = M_Gamma_f_T
+        constraint_violations = np.dot(constraint_matrix, control_points.flatten()).flatten() - waypoints.flatten()
+        return constraint_violations
+    
+    def __create_intermediate_waypoint_constraints(self, intermediate_locations, num_cont_pts, num_intermediate_waypoints):
+        order = 3
+        start_time = 0
+        scale_factor = 1
+        lower_bound = 0
+        upper_bound = 0
+        def intermediate_waypoint_constraint_function(variables):
+            control_points = self.__get_objective_variables(variables, num_cont_pts)
+            intermediate_waypoint_times = self.__get_intermediate_waypoint_times(variables, num_intermediate_waypoints)
+            constraints = np.zeros((self._dimension, num_intermediate_waypoints))
+            for i in range(num_intermediate_waypoints):
+                desired_location = intermediate_locations[:,i]
+                time = intermediate_waypoint_times[i]
+                interval = int(time)
+                interval_cont_pts = control_points[:,interval:interval+self._order+1]
+                location = evaluate_point_on_interval(interval_cont_pts, time-interval, 0, 1)
+                constraints[:,i] = location.flatten() - desired_location
+            return constraints.flatten()
+        intermediate_waypoint_constraint = NonlinearConstraint(intermediate_waypoint_constraint_function, lb= lower_bound, ub=upper_bound)
+        return intermediate_waypoint_constraint
+    
+    def __create_intermediate_waypoint_time_constraint(self, num_cont_pts, num_intermediate_waypoints):
+        num_extra_spaces = 2 + num_intermediate_waypoints
+        m = num_intermediate_waypoints
+        n = num_cont_pts
+        d = self._dimension
+        constraint_matrix = np.zeros((m-1,n*d+num_extra_spaces))
+        for i in range(m-1):
+            constraint_matrix[i,-i-1] = -1
+            constraint_matrix[i,-i-2] = 1
+        constraint = LinearConstraint(constraint_matrix, lb=-np.inf, ub=0)
+        return constraint
+
+    def __create_start_waypoint_derivative_constraints(self, start_waypoint: Waypoint, num_cont_pts):
+        lower_bound = 0
+        upper_bound = 0
+        if start_waypoint.checkIfVelocityActive():
+            start_velocity_desired = start_waypoint.velocity.flatten()
+        if start_waypoint.checkIfAccelerationActive():
+            start_acceleration_desired = start_waypoint.acceleration.flatten()
+        startVelocityIsActive = start_waypoint.checkIfVelocityActive()
+        startAccelerationIsActive = start_waypoint.checkIfAccelerationActive()
+        def start_waypoint_derivative_constraint_function(variables):
+            control_points = self.__get_objective_variables(variables, num_cont_pts)
+            start_waypoint_scalar, end_waypoint_scalar = self.__get_objective_waypoint_scalars(variables, num_cont_pts)
+            constraints = np.array([])
+            if startVelocityIsActive:
+                start_velocity_direction = start_waypoint_scalar*(control_points[:,2] - control_points[:,0])/2
+                constraints = start_velocity_direction - start_velocity_desired
+            if startAccelerationIsActive:
+                start_acceleration_direction = start_waypoint_scalar*start_waypoint_scalar*(control_points[:,0] - 2*control_points[:,1] + control_points[:,2])
+                constraints_2 = start_acceleration_direction - start_acceleration_desired
+                constraints = np.concatenate((constraints, constraints_2))
+            return constraints.flatten()
+        start_waypoint_derivative_constraint = NonlinearConstraint(start_waypoint_derivative_constraint_function, lb= lower_bound, ub=upper_bound)
+        return start_waypoint_derivative_constraint
+    
+    def __create_end_waypoint_derivative_constraints(self, end_waypoint: Waypoint, num_cont_pts):
+        lower_bound = 0
+        upper_bound = 0
+        if end_waypoint.checkIfVelocityActive():
+            end_velocity_desired = end_waypoint.velocity.flatten()
+        if end_waypoint.checkIfAccelerationActive():
+            end_acceleration_desired = end_waypoint.acceleration.flatten()
+        endVelocityIsActive = end_waypoint.checkIfVelocityActive()
+        endAccelerationIsActive = end_waypoint.checkIfAccelerationActive()
+        def end_waypoint_derivative_constraint_function(variables):
+            control_points = self.__get_objective_variables(variables, num_cont_pts)
+            start_waypoint_scalar, end_waypoint_scalar = self.__get_objective_waypoint_scalars(variables, num_cont_pts)
+            constraints = np.array([])
+            # if endVelocityIsActive:
+            #     end_velocity_direction = end_waypoint_scalar*(control_points[:,-1] - control_points[:,-3])/2
+            #     constraints = end_velocity_direction - end_velocity_desired
+            # if endAccelerationIsActive:
+            #     end_acceleration_direction = end_waypoint_scalar*end_waypoint_scalar*(control_points[:,-3] - 2*control_points[:,-2] + control_points[:,-1])
+            #     constraints_2 = end_acceleration_direction - end_acceleration_desired
+            #     constraints = np.concatenate((constraints, constraints_2))
+            if endVelocityIsActive:
+                end_velocity_direction = start_waypoint_scalar*(control_points[:,-1] - control_points[:,-3])/2
+                constraints = end_velocity_direction - end_velocity_desired
+            if endAccelerationIsActive:
+                end_acceleration_direction = start_waypoint_scalar*start_waypoint_scalar*(control_points[:,-3] - 2*control_points[:,-2] + control_points[:,-1])
+                constraints_2 = end_acceleration_direction - end_acceleration_desired
+                constraints = np.concatenate((constraints, constraints_2))
+            return constraints.flatten()
+        end_waypoint_derivative_constraint = NonlinearConstraint(end_waypoint_derivative_constraint_function, lb= lower_bound, ub=upper_bound)
+        return end_waypoint_derivative_constraint
+
+    def __create_curvature_constraint(self, 
+                                      max_curvature: float, 
+                                      num_cont_pts: int):
+        def curvature_constraint_function(variables):
+            control_points = self.__get_objective_variables(variables, num_cont_pts)
+            return self._curvature_const_obj.get_spline_curvature_constraint(control_points,max_curvature)
+        lower_bound = - np.inf
+        upper_bound = 0
+        curvature_constraint = NonlinearConstraint(curvature_constraint_function , lb = lower_bound, ub = upper_bound)
+        return curvature_constraint
+    
+    def __create_incline_constraints(self, max_incline, num_cont_pts):
+        def incline_constraint_function(variables):
+            control_points = self.__get_objective_variables(variables, num_cont_pts)
+            constraint = self._incline_const_obj.get_spline_incline_constraint(control_points, 1, max_incline)
+            return constraint
+        lower_bound = - np.inf
+        upper_bound = 0
+        incline_constraint = NonlinearConstraint(incline_constraint_function , lb = lower_bound, ub = upper_bound)
+        return incline_constraint
+
+    def __create_safe_flight_corridor_constraint(self, sfc_data: SFC_Data, num_cont_pts, num_intermediate_waypoints):
+        # create the rotation matrix.
+        num_extra_spaces = 2 + num_intermediate_waypoints
+        num_corridors = self.__get_num_corridors(sfc_data)
+        num_minvo_cont_pts = (num_cont_pts - self._order)*(self._order+1)
+        intervals_per_corridor = sfc_data.get_intervals_per_corridor()
+        sfc_list = sfc_data.get_sfc_list()
+        M_rot = self.get_composite_sfc_rotation_matrix(intervals_per_corridor, sfc_list, num_minvo_cont_pts)
+        # create the bspline to minvo conversion matrix 
+        M_minvo = get_composite_bspline_to_minvo_conversion_matrix(\
+            num_cont_pts, self._order)
+        zero_block = np.zeros((num_minvo_cont_pts,num_cont_pts))
+        zero_col = np.zeros((num_minvo_cont_pts, num_extra_spaces))
+        if self._dimension == 2:
+            M_minvo = np.block([[M_minvo, zero_block, zero_col],
+                                        [zero_block, M_minvo, zero_col]])
+        if self._dimension == 3:
+            M_minvo = np.block([[M_minvo,    zero_block, zero_block, zero_col],
+                                [zero_block, M_minvo   , zero_block, zero_col],
+                                [zero_block, zero_block, M_minvo   , zero_col]])
+        conversion_matrix = M_rot @ M_minvo
+        #create bounds
+        lower_bounds = np.zeros((self._dimension, num_minvo_cont_pts))
+        upper_bounds = np.zeros((self._dimension, num_minvo_cont_pts))
+        index = 0
+        for corridor_index in range(num_corridors):
+            num_intervals = intervals_per_corridor[corridor_index]
+            lower_bound, upper_bound = sfc_list[corridor_index].getRotatedBounds()
+            num_points = num_intervals*(self._order+1)
+            lower_bounds[:,index:index+num_points] = lower_bound
+            upper_bounds[:,index:index+num_points] = upper_bound
+            index = index+num_points
+        safe_corridor_constraints = LinearConstraint(conversion_matrix, lb=lower_bounds.flatten(), ub=upper_bounds.flatten())
+        return safe_corridor_constraints
+    
+    def __create_obstacle_constraints(self, obstacles, num_cont_pts, obstacle_type = "sphere"):
+        def obstacle_constraint_function(variables):
+            control_points = self.__get_objective_variables(variables, num_cont_pts)
+            # return self._obstacle_cons_obj.getObstacleConstraintsForIntervals(control_points, obstacle.radius, obstacle.center)
+            radii = np.zeros(len(obstacles))
+            centers = np.zeros((self._dimension,len(obstacles)))
+            heights = np.zeros(len(obstacles))
+            for i in range(len(obstacles)):
+                radii[i] = obstacles[i].radius
+                centers[0,i] = obstacles[i].center[0,0]
+                centers[1,i] = obstacles[i].center[1,0]
+                heights[i] = obstacles[i].height
+                if self._dimension == 3:
+                    centers[2,i] = obstacles[i].center[2,0]
+            return self._obstacle_cons_obj.getObstaclesConstraintsForSpline(control_points, radii, centers, heights, obstacle_type)
+        lower_bound = 0
+        upper_bound = np.inf
+        obstacle_constraint = NonlinearConstraint(obstacle_constraint_function , lb = lower_bound, ub = upper_bound)
+        return obstacle_constraint
+    
+    def get_composite_sfc_rotation_matrix(self, intervals_per_corridor, sfcs, num_minvo_cont_pts):
+        num_corridors = len(intervals_per_corridor)
+        M_len = num_minvo_cont_pts*self._dimension
+        M_rot = np.zeros((M_len, M_len))
+        num_cont_pts_per_interval = self._order + 1
+        interval_count = 0
+        dim_step = num_minvo_cont_pts
+        for corridor_index in range(num_corridors):
+            rotation = sfcs[corridor_index].rotation.T
+            num_intervals = intervals_per_corridor[corridor_index]
+            for interval_index in range(num_intervals):
+                for cont_pt_index in range(num_cont_pts_per_interval):
+                    index = interval_count*num_cont_pts_per_interval+cont_pt_index
+                    M_rot[index, index] = rotation[0,0]
+                    M_rot[index, index + dim_step] = rotation[0,1]
+                    M_rot[index + dim_step, index] = rotation[1,0]
+                    M_rot[index + dim_step, index + dim_step] = rotation[1,1]
+                    if self._dimension == 3:
+                        M_rot[2*dim_step + index, index] = rotation[2,0]
+                        M_rot[2*dim_step + index, index + dim_step] = rotation[2,1]
+                        M_rot[2*dim_step + index, index + 2*dim_step] = rotation[2,2]
+                        M_rot[dim_step + index, index + 2*dim_step] = rotation[1,2]
+                        M_rot[index, index + 2*dim_step] = rotation[0,2]
+                interval_count += 1
+        return M_rot
+
+    def __create_initial_control_points(self, total_num_cont_pts, point_sequence):
+        num_segments = np.shape(point_sequence)[1] - 1
+        if num_segments < 2:
+            start_point = point_sequence[:,0]
+            end_point = point_sequence[:,1]
+            control_points = np.linspace(start_point,end_point,total_num_cont_pts).T
+        else:
+            control_points = np.empty(shape=(self._dimension,total_num_cont_pts))
+            distances = np.linalg.norm(point_sequence[:,1:] - point_sequence[:,0:-1],2,0)
+            for i in range(num_segments-1):
+                distances[i+1] = distances[i+1] + distances[i]
+            distance_between_cont_pts = distances[num_segments-1] / (total_num_cont_pts-1)
+            segment_num = 0
+            current_distance = 0
+            prev_point_location = point_sequence[:,0]
+            step_distance = 0
+            for i in range(total_num_cont_pts-1):
+                interval_start_point = point_sequence[:,segment_num]
+                interval_end_point = point_sequence[:,segment_num+1]
+                vector_to_point = interval_end_point - interval_start_point
+                unit_vector_to_point = vector_to_point / (np.linalg.norm(vector_to_point))
+                control_points[:,i] = prev_point_location + unit_vector_to_point*step_distance
+                prev_point_location = control_points[:,i]
+                step_distance = distance_between_cont_pts
+                current_distance = current_distance + step_distance
+                if distances[segment_num] < current_distance:
+                    step_distance = current_distance - distances[segment_num]
+                    segment_num += 1
+                    prev_point_location = point_sequence[:,segment_num]
+            control_points[:,-1] = point_sequence[:,-1]
+        # control_points = np.array([[1,-1,-1,3,3,7,7,5],[0,0,-3,-3,3,3,0,0]])
+        return control_points
+    
+    def __create_intermediate_waypoint_times(self, 
+                                             point_sequence, 
+                                             num_cont_pts):
+        num_intervals = num_cont_pts - self._order
+        num_segments = np.shape(point_sequence)[1] - 1
+        intermediate_waypoint_times = np.array([0.5])
+        if num_segments > 2:
+            distances = np.linalg.norm(point_sequence[:,1:] - point_sequence[:,0:-1],2,0)
+            for i in range(num_segments-1):
+                distances[i+1] = distances[i+1] + distances[i]
+            norm_distances = distances/distances[num_segments-1]
+            intermediate_waypoint_times = norm_distances[0:-1]*num_intervals
+        return intermediate_waypoint_times
+
+    def __get_num_control_points(self, 
+                                 num_intervals: int):
+        num_control_points = num_intervals + self._order
+        return int(num_control_points)
+    
+    def __get_num_corridors(self, sfc_data:SFC_Data = None):
+        if sfc_data is None:
+            return int(0)
+        else:
+            return sfc_data.get_num_corridors()
         
 
-        for i, obstacle in enumerate(obstacles_list):
+    ########################################################################################
+    #section on SFCs for control points, where we have already generated control points for
+    #those sections of intervals. Boy this is one headache.
+
+    def __create_safe_flight_corridor_constraint_precomputed(self,
+                                                             sfc_data: SFC_Data,
+                                                             num_variable_control_pts: int,
+                                                             numIntervalsOfInterestPerCorridor: int):
+        
+        #gets the number of minvo control points
+        num_minvo_cont_pts = (num_variable_control_pts - self._order)*(self._order + 1)
+        #gets the list of safe flight corridors
+        sfc_list = sfc_data.get_sfc_list()
+        #gets the number of corridors
+        numCorridors = sfc_data.get_num_corridors()
+        #gets the Rotation matrix
+        M_rot = self.get_composite_sfc_rotation_matrix_precomputed(numCorridors=numCorridors,
+                                                                   numIntervalsOfInterest_perCorridor=numIntervalsOfInterestPerCorridor,
+                                                                   sfc_list=sfc_list,
+                                                                   num_minvo_cont_pts=num_minvo_cont_pts)
+        
+        #creates the matrix for Minvo rotation
+        M_minvo_individual = get_composite_bspline_to_minvo_conversion_matrix(num_bspline_control_points=num_variable_control_pts,
+                                                                              order=self._order)
+        
+        #creates a zero block
+        zero_block = np.zeros((num_minvo_cont_pts, num_variable_control_pts))
+
+        #creates the M minvo joint
+        M_minvo = np.block([[M_minvo_individual, zero_block],
+                                  [zero_block, M_minvo_individual]])
+        
+        #gets the conversion matrix
+        conversion_matrix = M_rot @ M_minvo
+
+        #creates the lower bounds
+        lower_bounds = np.zeros((self._dimension, num_minvo_cont_pts))
+        upper_bounds = np.zeros((self._dimension, num_minvo_cont_pts))
 
 
+        #creates the current helper index
+        current_index = 0
+        #iterates over the number of corridors
+        for corridor_index in range(numCorridors):
+
+            #if we are in the first or last corridors, then there are M - d Minvo Sections
+            if (corridor_index == 0) or (corridor_index == (numCorridors - 1)):
+                current_num_minvo_sections = numIntervalsOfInterestPerCorridor - self._order
+            #otherwise, there are M minvo sections of interest
+            else:
+                current_num_minvo_sections = numIntervalsOfInterestPerCorridor
             
-            potato = 0
+            #gets the current number of minvo points, which is the current number of minvo sections in a corridor
+            #times by the degree (or order in this nomenclature) plus 1
+            current_num_minvo_points = current_num_minvo_sections * (self._order + 1)
+
+            #gets the lower and upper bounds
+            current_sfc = sfc_list[corridor_index]
+            lower_bound, upper_bound = current_sfc.getRotatedBounds()
+
+            #then sets the lower bounds for these sections to the lower 
+            lower_bounds[:,current_index:(current_index+current_num_minvo_points)] = lower_bound
+            upper_bounds[:,current_index:(current_index+current_num_minvo_points)] = upper_bound
+
+            #at the end, increments the index by the number of minvo points
+            current_index += current_num_minvo_points
+
+        #gets the flattened lower bounds and upper
+        lower_bounds_flattened = lower_bounds.flatten()
+        upper_bounds_flattened = upper_bounds.flatten()
+
+        #now with the conversion matrix, and the upper and lower bounds, we can construct a linear constraint
+        safe_corridor_constraints = LinearConstraint(A=conversion_matrix,
+                                                     lb=lower_bounds_flattened,
+                                                     ub=upper_bounds_flattened)
+        #returns the safe flight corridor constraints
+        return safe_corridor_constraints
+
+
+    def get_composite_sfc_rotation_matrix_precomputed(self,
+                                                      numCorridors: int,
+                                                      numIntervalsOfInterest_perCorridor: int,
+                                                      sfc_list: list[SFC],
+                                                      num_minvo_cont_pts: int):
+        
+        #initializes the length of the M matrix
+        M_len = num_minvo_cont_pts*self._dimension
+        #initializes the M rotation matrix with all zeros
+        M_rot = np.zeros((M_len, M_len))
+
+        #sets the number of minvo points per control point
+        numMinvoPoints_perInterval = self._order + 1
+        #sets the interval count
+        interval_count = 0
+
+        #iterates over each of the corridors
+        for corridor_index in range(numCorridors):
+            #gets the current Sfc
+            current_sfc = sfc_list[corridor_index]
+            #since we are iterating over each of the corridors, we need the rotation matrix
+            #from the world frame to the corridor frame. 
+            R_worldToCorridor = current_sfc.getRotation_worldToCorridor()
+
+            #checks if we are in the (first or last corridor) or a corridor in the middle
+            #if we are in the first or last corridor, we set the number of valid minvo sections
+            #to M-d
+            if (corridor_index == 0) or (corridor_index == (numCorridors - 1)):
+                numMinvoSections_currentCorridor = numIntervalsOfInterest_perCorridor - self._order
+            #otherwise, it is M
+            else:
+                numMinvoSections_currentCorridor = numIntervalsOfInterest_perCorridor
+
+            #iterates over the number of minvo sections in the current corridor
+            for minvoSection_index in range(numMinvoSections_currentCorridor):
+                #iterates over each minvo point for each minvo section index
+                for minvoPoint_index in range(numMinvoPoints_perInterval):
+                    currentIndex = interval_count*numMinvoPoints_perInterval + minvoPoint_index
+                    #sets the corresponding portion of the M matrix to the rotation amtrix
+                    M_rot[currentIndex, currentIndex] = R_worldToCorridor[0,0]
+                    M_rot[currentIndex, currentIndex + num_minvo_cont_pts] = R_worldToCorridor[0,1]
+                    M_rot[currentIndex + num_minvo_cont_pts, currentIndex] = R_worldToCorridor[1,0]
+                    M_rot[currentIndex + num_minvo_cont_pts, currentIndex + num_minvo_cont_pts] = R_worldToCorridor[1,1]
+
+                #increments the interval count
+                interval_count += 1
+
+        #returns the M rotation matrix
+        return M_rot
+
+                
+    #defines the alternative function to get the composite sfc rotation matrix
+
+
+#defines the function to get the number of control points from an existing array
+def getNumCtrPts_array(controlPoints: np.ndarray):
+
+    #gets the shape of the control points array
+    controlPoints_shape = np.shape(controlPoints)
+
+    #case it is along the zero axis
+    if controlPoints_shape[0] > controlPoints_shape[1]:
+        numControlPoints = controlPoints_shape[0]
+    else:
+        numControlPoints = controlPoints_shape[1]
+
+    #returns the number of control points
+    return numControlPoints
+
+
+#gets the central control points from the complete initial control points list
+def getPartitionedControlPoints_initial(initialControlPoints: np.ndarray,
+                                        degree: int):
+    
+    #checks the shape and works with that shape
+    pointsShape = np.shape(initialControlPoints)
+
+    #case tall matrix
+    if pointsShape[0] > pointsShape[1]:
+        numControlPoints = pointsShape[0]
+        numIntervalsOfInterest = numControlPoints - degree
+        startControlPoints_initial = initialControlPoints[0:degree,:]
+        centralControlPoints_initial = initialControlPoints[degree:numIntervalsOfInterest,:]
+        endControlPoints_initial = initialControlPoints[numIntervalsOfInterest:,:]
+    #case fat matrix
+    else:
+        numControlPoints = pointsShape[1]
+        numIntervalsOfInterest = numControlPoints - degree
+        startControlPoints_initial = initialControlPoints[:,0:degree]
+        centralControlPoints_initial = initialControlPoints[:,degree:numIntervalsOfInterest]
+        endControlPoints_initial = initialControlPoints[:,numIntervalsOfInterest:]
+
+    #returns the initial central control points
+    return startControlPoints_initial, centralControlPoints_initial, endControlPoints_initial
+
+#function to reconstruct flattened control points, with the start and end sections
+def reconstructFlattenedControlPoints(startControlPoints: np.ndarray,
+                                      flattenedCenterControlPoints: np.ndarray,
+                                      endControlPoints: np.ndarray,
+                                      numCenterControlPoints: int,
+                                      dimension: int):
+    
+    #reshapes the flattened center control points into the correct shape
+    centerControlPoints = np.reshape(flattenedCenterControlPoints, (dimension, numCenterControlPoints))
+
+    #concatenates them together to create the full control point array
+    completeControlPoints = np.concatenate((startControlPoints, centerControlPoints, endControlPoints), axis=1)
+
+    #returns  the control points
+    return completeControlPoints

@@ -3,11 +3,11 @@ import os, sys
 from pathlib import Path
 sys.path.insert(0,os.fspath(Path(__file__).parents[1]))
 
-from message_types.msg_flight_corridors import MsgFlightCorridor
-from message_types.msg_world_map import MsgWorldMap
-from tools.intersections import intersectionDetected, intersectionOccurred_Matrix
+from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
+from rrt_mavsim.tools.intersections import intersectionDetected, intersectionOccurred_Matrix
 import numpy as np
-import parameters.planner_parameters as PLAN
+import rrt_mavsim.parameters.planner_parameters as PLAN
 
 
 numDimensions = 2
