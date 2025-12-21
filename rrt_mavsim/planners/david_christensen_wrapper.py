@@ -76,7 +76,7 @@ class PathOptimizer:
         #obtains the circular objects which are inscribed within the rectangular obstacles
         self.circular_obstacles = worldMap_rectToCircle_conversion(worldMap=self.world_map,
                                                                    plane=self.plane)
-        
+    
 
         #gets the number of control points
         numControlPoints = (np.shape(controlPoints_init))[1]
