@@ -3,11 +3,12 @@ import rrt_mavsim.parameters.planner_parameters as PLAN
 import numpy as np
 import rrt_mavsim.parameters.planner_parameters as PLAN
 import rrt_mavsim.parameters.planarVTOL_map_parameters as PLANAR_PARAM
+import rrt_mavsim.parameters.city_parameters as CITY_PARAM
 from rrt_mavsim.tools.obstacles import RectangularObstacle
 from scipy.optimize import linprog
 import time
 from enum import Enum
-from rrt_mavsim.tools.getEulerUnit import getRotFromUnitVec
+from rrt_mavsim.tools.getEulerUnit import getRotFromUnitVec, getRotFromPlane
 from rrt_mavsim.tools.plane_projections import *
 from rrt_mavsim.message_types.msg_plane import MsgPlane
 
@@ -21,6 +22,47 @@ class MapTypes(str, Enum):
     MAZE = 'Maze'
     PLANAR_VTOL_SIMPLIFIED = 'PlanarVTOLSimplified'
 
+
+class CityParams:
+
+    def __init__(self,
+                 plane: MsgPlane,
+                 cityWidth: float = CITY_PARAM.city_width,
+                 numBlocks: int = CITY_PARAM.num_blocks,
+                 obstacleWidthRatio: float = CITY_PARAM.obstacleWidthRatio,
+                 startPosition: np.ndarray = CITY_PARAM.startPosition_2D,
+                 endPosition: np.ndarray = CITY_PARAM.endPosition_2D):
+
+        self.plane = plane
+        
+        self.cityWidth = cityWidth
+        self.numBlocks = numBlocks
+        self.obstacleWidthRatio = obstacleWidthRatio
+        self.startPosition = startPosition
+        self.endPosition = endPosition
+
+        blockWidth = cityWidth / numBlocks
+        obstacleWidth = obstacleWidthRatio * blockWidth
+
+
+        #creates the obstacle dimensions
+        self.obstacleDimensions = np.array([[obstacleWidth],
+                                            [obstacleWidth],
+                                            [CITY_PARAM.building_height]])
+
+        
+        northStart = blockWidth / 2.0
+        eastStart = blockWidth / 2.0
+
+        #from this information, we create the 2D position of the obstacles
+        self.obstaclePositions_list = []
+        for i in range(numBlocks):
+            currentNorth = northStart + blockWidth*i
+            for j in range(numBlocks):
+                currentEast = eastStart + blockWidth*j
+
+                obstaclePosition = np.array([[currentNorth],[currentEast]])
+                self.obstaclePositions_list.append(obstaclePosition)
 
 class PlanarVTOLParams:
 
@@ -78,8 +120,6 @@ class PlanarVTOLParams:
         
         potato = 0
 
-
-
 class PlanarVTOLSimplifiedParams:
 
     def __init__(self,
@@ -126,10 +166,6 @@ class PlanarVTOLSimplifiedParams:
                 self.positionsList_2D.append(np.array([[currentNorth],[currentAltitude]]))
 
 
-                
-
-                
-
 class MsgWorldMap:
 
     #creates the init function
@@ -137,7 +173,8 @@ class MsgWorldMap:
                  obstacleFieldType: MapTypes,
                  numDimensions_algorithm: int,
                  planarVTOL_Params: PlanarVTOLParams = None,
-                 planarVTOLSimplified_Params: PlanarVTOLSimplifiedParams = None):
+                 planarVTOLSimplified_Params: PlanarVTOLSimplifiedParams = None,
+                 cityParams: CityParams = None):
         
 
         #saves all fo the above
@@ -146,8 +183,8 @@ class MsgWorldMap:
 
         #saves the parameters for each type of obstacle field
         self.pln_VTOL_Param = planarVTOL_Params
-
         self.planarVTOLSimplified_params = planarVTOLSimplified_Params
+        self.cityParams = cityParams
 
         if obstacleFieldType == MapTypes.PLANAR_VTOL:
 
@@ -164,13 +201,46 @@ class MsgWorldMap:
 
             self.searchDimensions_start = planarVTOLSimplified_Params.startPosition_2D
             self.searchDimensions_end = planarVTOLSimplified_Params.endPosition_2D
+        elif obstacleFieldType == MapTypes.CITY:
+
+            self.initCityMap()
+
+            self.searchDimensions_start = cityParams.startPosition
+            self.searchDimensions_end = cityParams.endPosition
 
         self.generateAbMatricesLists()
-
         self.generateFeasibilityList()
 
         potato = 0
 
+    def initCityMap(self):
+
+        plane_msg = self.cityParams.plane
+
+        self.Q = getPlaneBasis(n_hat=plane_msg.n_hat)
+
+        self.p0 = plane_msg.origin_3D
+        plane_msg = self.cityParams.plane
+
+        Rot_subspaceToWorld = getRotFromPlane(plane=plane_msg)
+        Rot_worldToSubspace = Rot_subspaceToWorld.T
+
+        self.obstaclesList = []
+        
+        for position_2D in self.cityParams.obstaclePositions_list:
+
+            #gets the 3D position
+            position_3D = map_2D_to_3D_planeMsg(vec_2D=position_2D,
+                                                plane_msg=plane_msg)
+            #gets the position in the subspace
+            position_3D_subspace = Rot_worldToSubspace @ position_3D
+
+            #creates the temp obstacle 
+            temp_obstacle = RectangularObstacle(dimensions_obs=self.cityParams.obstacleDimensions,
+                                                translation_obs=position_3D_subspace,
+                                                rotation_obsToWorld=Rot_subspaceToWorld)
+
+            self.obstaclesList.append(temp_obstacle)
     
     def initPlanarVTOL_map(self):
 
@@ -260,7 +330,7 @@ class MsgWorldMap:
             #gets the position in 3 Dimensions in the world frame
             position_3D_world = map_2D_to_3D_planeMsg(vec_2D=position_2D,
                                                 plane_msg=plane_msg)
-            
+
             #gets the position in the subspace frame
             position_3D_subspace = Rot_worldToSubspace @ position_3D_world
 
@@ -269,6 +339,7 @@ class MsgWorldMap:
                                                translation_obs=position_3D_subspace,
                                                rotation_obsToWorld=Rot_subspaceToWorld)
             self.obstaclesList.append(tempObstacle)
+
 
 
 
