@@ -55,6 +55,7 @@ class DrawMap:
 
             #concatenates the full meshes and colors
             fullMesh = np.concatenate((fullMesh, obstacleMeshes), axis=0)
+            fullMeshShape = np.shape(fullMesh)
             fullMeshColors = np.concatenate((fullMeshColors, obstacleMeshColors), axis=0)
 
         self.ground_mesh = gl.GLMeshItem(

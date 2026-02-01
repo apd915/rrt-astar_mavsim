@@ -165,6 +165,11 @@ class PlanarVTOLSimplifiedParams:
 
                 self.positionsList_2D.append(np.array([[currentNorth],[currentAltitude]]))
 
+class FloatingBlocksParams:
+
+    def __init__(self):
+
+        pass
 
 class MsgWorldMap:
 
@@ -339,9 +344,6 @@ class MsgWorldMap:
                                                translation_obs=position_3D_subspace,
                                                rotation_obsToWorld=Rot_subspaceToWorld)
             self.obstaclesList.append(tempObstacle)
-
-
-
 
     #gets all of the A and b matrices for each of the obstacles as a large list
     def generateAbMatricesLists(self):

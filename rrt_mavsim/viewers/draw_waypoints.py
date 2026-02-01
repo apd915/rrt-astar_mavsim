@@ -87,7 +87,11 @@ class DrawWaypoints:
 
     #defines the draw 3 dimensions thing
     def drawSFC_3D(self,
-                   sfc: MsgFlightCorridor):
+                   flightCorridor: MsgFlightCorridor):
+
+        #gets the normals and vertices list
+        normalsList, vertices_list = flightCorridor.getNormalsVertices_3D(plane=self.plane)
+        
 
         pass
 

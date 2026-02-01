@@ -9,8 +9,10 @@ import rrt_mavsim.parameters.aerosonde_parameters as AERO
 import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT
 from rrt_mavsim.viewers.view_manager import ViewManager
 from rrt_mavsim.planners.rrt_sfc_bspline import RRT_SFC_BSpline
+from rrt_mavsim.viewers.plot_map_path import PlotMapPath
 
 viewer = ViewManager()
+
 
 #gets the altitude
 altitude = CITY.altitude
@@ -55,5 +57,10 @@ viewer.update_planning_tree(waypoints=waypoints_not_smooth,
                             world_map=worldMap,
                             optimizedControlPoints=controlPoints,
                             plane=CITY.plane_msg)
+
+plotter = PlotMapPath(map=worldMap,
+                      waypoints_not_smooth=waypoints_not_smooth)
+
+plotter.plotMap()
 
 testPoint = 0
