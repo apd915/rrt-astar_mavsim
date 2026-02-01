@@ -24,20 +24,6 @@ class DrawMap:
         fullMeshColors = np.array([], dtype=np.float32).reshape(0, 3, 4)
 
 
-        #plots the start mesh
-        startBlockVertices = [np.array([[-25],[-25],[-25]]),
-                              np.array([[25],[-25],[-25]]),
-                              np.array([[25],[25],[-25]]),
-                              np.array([[-25],[25],[-25]]),
-                              np.array([[-25],[-25],[25]]),
-                              np.array([[25],[-25],[25]]),
-                              np.array([[25],[25],[25]]),
-                              np.array([[-25],[25],[25]])]
-        
-        startBlockMeshes, startBlockMeshColors = self.building_meshes_colors(vertices=startBlockVertices, startBlock=True)
-        #concatenates the full meshes and colors
-        fullMesh = np.concatenate((fullMesh, startBlockMeshes), axis=0)
-        fullMeshColors = np.concatenate((fullMeshColors, startBlockMeshColors), axis=0)
 
         self.obstaclePositionsList_unrotated = []
         self.obstaclePositionsList_rotated = []
@@ -77,7 +63,7 @@ class DrawMap:
             drawEdges=True,  # draw edges between mesh elements
             smooth=False,  # speeds up rendering
             computeNormals=False)  # speeds up rendering
-        self.ground_mesh.setGLOptions('translucent')
+        self.ground_mesh.setGLOptions('opaque')
         self.window.addItem(self.ground_mesh)
 
 
@@ -88,7 +74,6 @@ class DrawMap:
         
 
         pts = []
-
 
         for vertex in vertices:
             flattenedVertex = vertex.flatten()

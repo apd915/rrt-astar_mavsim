@@ -3,7 +3,7 @@ import rrt_mavsim.parameters.planner_parameters as PLAN
 import numpy as np
 import rrt_mavsim.parameters.planner_parameters as PLAN
 import rrt_mavsim.parameters.planarVTOL_map_parameters as PLANAR_PARAM
-import rrt_mavsim.parameters.city_parameters as CITY_PARAM
+import rrt_mavsim.parameters.city_parameters as CITY
 from rrt_mavsim.tools.obstacles import RectangularObstacle
 from scipy.optimize import linprog
 import time
@@ -27,11 +27,11 @@ class CityParams:
 
     def __init__(self,
                  plane: MsgPlane,
-                 cityWidth: float = CITY_PARAM.city_width,
-                 numBlocks: int = CITY_PARAM.num_blocks,
-                 obstacleWidthRatio: float = CITY_PARAM.obstacleWidthRatio,
-                 startPosition: np.ndarray = CITY_PARAM.startPosition_2D,
-                 endPosition: np.ndarray = CITY_PARAM.endPosition_2D):
+                 cityWidth: float = CITY.city_width,
+                 numBlocks: int = CITY.num_blocks,
+                 obstacleWidthRatio: float = CITY.obstacleWidthRatio,
+                 startPosition: np.ndarray = CITY.startPosition_2D,
+                 endPosition: np.ndarray = CITY.endPosition_2D):
 
         self.plane = plane
         
@@ -48,7 +48,7 @@ class CityParams:
         #creates the obstacle dimensions
         self.obstacleDimensions = np.array([[obstacleWidth],
                                             [obstacleWidth],
-                                            [CITY_PARAM.building_height]])
+                                            [CITY.building_height]])
 
         
         northStart = blockWidth / 2.0

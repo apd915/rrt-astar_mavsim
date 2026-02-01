@@ -71,6 +71,10 @@ class Msg_SFC:
         elif self.numDimensions == 3:
             normalsList, verticesList = self.__getNormalsVertices_3d()
 
+        else: 
+            normalsList=[]
+            verticesList=[]
+
         return normalsList, verticesList
 
 
@@ -278,7 +282,9 @@ class Msg_SFC:
 
         return normalVectorsList, verticesForNormalVectorsList
     
-
-
     def getNumDimensions(self):
         return self.numDimensions
+
+
+    #defines the functions used to plot out the safe flight corridors
+

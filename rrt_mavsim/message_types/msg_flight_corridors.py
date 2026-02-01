@@ -1,14 +1,18 @@
 import numpy as np
+from shapely.lib import equals_exact
 import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PARAM
 from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
 from rrt_mavsim.tools.rotations import euler_to_rotation, euler_to_rotation_2D
-from rrt_mavsim.tools.plane_projections import map_2D_to_3D
+from rrt_mavsim.tools.plane_projections import map_2D_to_3D, map_2D_to_3D_planeMsg
+from rrt_mavsim.message_types.msg_plane import MsgPlane
 
 #A note on the following:
 #if this is a 2D flight corridor, the positions will be given in 2D,
 #that is, in the frame of the work plane.
 #I attempt to distinguish between both
 
+#the purpose of this class is to have a transition class betewen individual points on the tree
+#and the Msg_SFC class, which is a bit more abstract.
 
 class MsgFlightCorridor:
 
@@ -174,8 +178,7 @@ class MsgFlightCorridor:
     
 
     def getNormalsVertices_3D(self,
-                              n_hat: np.ndarray = None,
-                              p0: np.ndarray = None):
+                              plane: MsgPlane = None):
         
         if self.numDimensions == 2:
             normals_2D, vertices_2D = self.sfc.getNormalsVertices()
@@ -183,13 +186,14 @@ class MsgFlightCorridor:
             normals = normals_2D
             vertices = []
             for vertex_2D in vertices_2D:
-                vertex = map_2D_to_3D(vec_2D=vertex_2D,
-                                      n_hat=n_hat,
-                                      p0=p0)
+                vertex = map_2D_to_3D_planeMsg(vec_2D=vertex_2D,
+                                               plane_msg=plane)
                 vertices.append(vertex)
 
         elif self.numDimensions == 3:
             normals, vertices = self.sfc.getNormalsVertices()
+        else:
+            raise ValueError(f"Unsupported Dimension: {self.numDimensions}")
 
         return normals, vertices
 

@@ -1,4 +1,6 @@
 import numpy as np
+from rrt_mavsim.message_types.msg_plane import MsgPlane
+from rrt_mavsim.tools.plane_projections import map_2D_to_3D_planeMsg
 
 #sets the number of dimensions for this algorithm
 numDimensions = 2
@@ -19,3 +21,16 @@ altitude = 100.0
 #creates the start and end positions in 2D
 startPosition_2D = np.array([[0.0],[0.0]])
 endPosition_2D = np.array([[city_width],[city_width]])
+
+mapOrigin_2D = np.array([[0.0],[0.0]])
+mapOrigin_3D = np.array([[0.0],[0.0],[-altitude]])
+n_hat = np.array([[0.0],[0.0],[1.0]])
+
+
+plane_msg = MsgPlane(n_hat=n_hat,origin_3D=mapOrigin_3D)
+
+startPosition_3D = map_2D_to_3D_planeMsg(vec_2D=startPosition_2D,
+                                         plane_msg=plane_msg)
+endPosition_3D = map_2D_to_3D_planeMsg(vec_2D=endPosition_2D,
+                                       plane_msg=plane_msg)
+

@@ -10,6 +10,7 @@ import rrt_mavsim.parameters.planner_parameters as PLAN
 import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PLAN
 from rrt_mavsim.viewers.draw_waypoints import DrawWaypoints
 from rrt_mavsim.viewers.drawEndPoints import DrawEndMarker
+from rrt_mavsim.message_types.msg_plane import MsgPlane
 
 
 class PlannerViewer:
@@ -46,19 +47,19 @@ class PlannerViewer:
                           tree: MsgWaypoints_SFC,
                           waypoints: MsgWaypoints_SFC,
                           waypoints_not_smooth: MsgWaypoints_SFC,
-                          optimizedControlPoints: np.ndarray = None):
+                          optimizedControlPoints: np.ndarray = None,
+                          plane: MsgPlane = None):
         
         DrawMap(map=worldMap,
                 window=self.window)
         
         #draws the waypoints out
         DrawWaypoints(waypoints=waypoints,
-                      window=self.window)
+                      window=self.window,
+                      plane=plane)
         
-        DrawEndMarker(position=np.array([[0.0],[0.0],[1000.0]]),
-                      scale=100.0,
-                      window=self.window)
-        
-        DrawEndMarker(position=np.array([[PLAN.city_width],[PLAN.city_width],[1000.0]]),
-                      scale=100.0,
-                      window=self.window)
+
+    def draw_map(self,
+                 worldMap: MsgWorldMap):
+        DrawMap(map=worldMap,
+                window=self.window)

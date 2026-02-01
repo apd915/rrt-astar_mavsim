@@ -4,6 +4,7 @@ import pyqtgraph as pg
 from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 from rrt_mavsim.viewers.planner_viewer import PlannerViewer
 from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
+from rrt_mavsim.message_types.msg_plane import MsgPlane
 import numpy as np
 
 
@@ -24,6 +25,7 @@ class ViewManager:
         tree: MsgWaypoints_SFC,
         world_map: MsgWorldMap,
         optimizedControlPoints: np.ndarray,
+        plane: MsgPlane = None
     ):
         self.planner_viewer.draw_tree_and_map(
             worldMap=world_map,
@@ -31,5 +33,11 @@ class ViewManager:
             waypoints=waypoints,
             optimizedControlPoints=optimizedControlPoints,
             waypoints_not_smooth=waypoints,
+            plane=plane
         )
+
+    def drawMap(self,
+                world_map: MsgWorldMap):
+
+        self.planner_viewer.draw_map(worldMap=world_map)
 

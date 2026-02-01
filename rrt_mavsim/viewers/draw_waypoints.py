@@ -4,6 +4,7 @@ import pyqtgraph.opengl as gl
 from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 import rrt_mavsim.parameters.display_parameters as DISPLAY
+from rrt_mavsim.message_types.msg_plane import MsgPlane
 
 
 R = np.array([[0, 1, 0], 
@@ -11,13 +12,9 @@ R = np.array([[0, 1, 0],
               [0, 0, -1]])
 
 
-red = np.array([[204, 0, 0],
-                [204, 0, 0]])/255.
 
-
-purple = np.array([[170, 0, 255],
-                   [170, 0, 255]])/255
-
+red = (1.0, 0.0, 0.0, 1.0)
+purple = (170/255, 0, 1.0, 1.0)
 
 class DrawWaypoints:
 
@@ -26,8 +23,7 @@ class DrawWaypoints:
                  waypoints: MsgWaypoints_SFC,
                  window: gl.GLViewWidget,
                  lineColor: np.ndarray = red,
-                 n_hat: np.ndarray = None,
-                 p0: np.ndarray = None):
+                 plane: MsgPlane = None):
 
 
         #gets the dimension
@@ -36,9 +32,7 @@ class DrawWaypoints:
         #gets the list of SFCs
         flightCorridor_list = waypoints.getAllFlightCorridors()
 
-        self.n_hat = n_hat
-        self.p0 = p0
-
+        self.plane = plane
 
         for flightCorridor in flightCorridor_list:
 
@@ -61,8 +55,7 @@ class DrawWaypoints:
                    window: gl.GLViewWidget):
         
         #gets the sfc from the flight corridor
-        normalsList, vertices_list = flightCorridor.getNormalsVertices_3D(n_hat=self.n_hat,
-                                                                          p0=self.p0)
+        normalsList, vertices_list = flightCorridor.getNormalsVertices_3D(plane=self.plane)
 
         numVertices = len(vertices_list)
 
@@ -84,7 +77,7 @@ class DrawWaypoints:
                                            width=lineWidth,
                                            antialias=True,
                                            mode='line_strip')
-            linePlot.setGLOptions('additive')
+            linePlot.setGLOptions('opaque')
 
             #adds the item to the window
             window.addItem(item=linePlot)

@@ -266,6 +266,7 @@ class RRT_SFC_BSpline:
 def generateRandomCandidate(
     world_map: MsgWorldMap, tree: MsgWaypoints_SFC, segmentLength: float
 ):
+
     # case map is 2D
     if world_map.numDimensions_algorithm == 2:
         # gets a 2D random position here in the tree
@@ -273,6 +274,9 @@ def generateRandomCandidate(
     elif world_map.numDimensions_algorithm == 3:
         # gets a 3D random position here in the tree
         randomPosition = generateRandomPosition_3D(worldMap=world_map)
+    else:
+
+        raise ValueError(f"Unsupported dimension: {world_map.numDimensions_algorithm}")
 
     # gets the tree positions
     allTreePositions = tree.getAllPositions()
@@ -286,7 +290,7 @@ def generateRandomCandidate(
     # gets the list of distances
     distances_list = np.diag(distance_vectors_list.T @ distance_vectors_list)
     # gets the min distance index
-    minCostParentIndex = np.argmin(distances_list)
+    minCostParentIndex = int(np.argmin(distances_list))
     # gets the min distance squared
     minDistanceSquared = distances_list.item(minCostParentIndex)
     # gets the min distance
@@ -350,3 +354,44 @@ def generateRandomPosition_3D(worldMap: MsgWorldMap):
     random_position = np.array([[x_random], [y_random], [z_random]])
 
     return random_position
+
+
+#generates the smoothed waypoints using dijkstra's algorithm
+def smoothPath_Dijkstra(waypoints_not_smooth: MsgWaypoints_SFC,
+                        worldMap: MsgWorldMap):
+
+    pass
+
+
+#defines helper function to get positions pairs list
+def getPositionsPairsList(waypoints_not_smooth: MsgWaypoints):
+
+    #gets all the positions in the corridor list
+    corridorPositions_list = waypoints_not_smooth.getAllPositionsList()
+    #gets  the length of the corridor positions list
+    corridorPositions_len = len(corridorPositions_list)
+
+    #creates the list of pairs of positions
+    positionsPairs_list = []
+
+    indices_list = []
+
+    #section to get all the combinations of the positions list
+    for i in range(corridorPositions_len - 1):
+
+        #gets the start position
+        start_position = corridorPositions_list[i]
+
+        #then iterates over the positions after i
+        for j in range((i + 1), corridorPositions_len):
+
+            end_position = corridorPositions_list[j]
+
+            #creates the tuple and saves it
+            tempList = [start_position, end_position]
+
+            positionsPairs_list.append(tempList)
+
+            indices_list.append([i,j])
+
+    return positionsPairs_list, indices_list

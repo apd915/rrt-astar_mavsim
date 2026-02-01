@@ -77,6 +77,8 @@ class MsgWaypoints_SFC:
     def getPosition(self,
                     index: int):
         return (self.positions)[index]
+
+
     def getCost(self,
                 index: int):
          return (self.costs)[index]
@@ -86,3 +88,5 @@ class MsgWaypoints_SFC:
     def getFlightCorridor(self,
                           index: int):
         return (self.flightCorridors)[index]
+
+
