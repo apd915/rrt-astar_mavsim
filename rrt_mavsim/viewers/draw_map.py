@@ -100,33 +100,18 @@ class DrawMap:
         yellow = np.array([1., 1., 0., 1])
 
 
-        if startBlock:
-            meshColors = np.empty((12, 3, 4), dtype=np.float32)
-            meshColors[0] = red
-            meshColors[1] = red
-            meshColors[2] = red
-            meshColors[3] = red
-            meshColors[4] = red
-            meshColors[5] = red
-            meshColors[6] = red
-            meshColors[7] = red
-            meshColors[8] = red
-            meshColors[9] = red
-            meshColors[10] = red
-            meshColors[11] = red
-        else:
-            meshColors = np.empty((12, 3, 4), dtype=np.float32)
-            meshColors[0] = green
-            meshColors[1] = green
-            meshColors[2] = green
-            meshColors[3] = green
-            meshColors[4] = green
-            meshColors[5] = green
-            meshColors[6] = green
-            meshColors[7] = green
-            meshColors[8] = yellow
-            meshColors[9] = yellow
-            meshColors[10] = yellow
-            meshColors[11] = yellow
+        meshColors = np.empty((12, 3, 4), dtype=np.float32)
+        meshColors[0] = blue
+        meshColors[1] = blue
+        meshColors[2] = blue
+        meshColors[3] = blue
+        meshColors[4] = blue
+        meshColors[5] = blue
+        meshColors[6] = blue
+        meshColors[7] = blue
+        meshColors[8] = blue
+        meshColors[9] = blue
+        meshColors[10] = blue
+        meshColors[11] = blue
 
         return meshes, meshColors

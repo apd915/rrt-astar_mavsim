@@ -8,6 +8,8 @@ from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
 from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 import rrt_mavsim.parameters.plotter_parameters as PLOT
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 
 
 class PlotMapPath:
@@ -20,8 +22,35 @@ class PlotMapPath:
         self.waypoints_not_smooth = waypoints_not_smooth
         self.waypoints_smooth = waypoints_smooth
 
+    def plot(self,
+             x_limits: tuple,
+             y_limits: tuple,
+             z_limits: tuple,
+             aspectRatio: list):
 
-    def plotMap(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        
+
+        self.plotMap(ax=ax)
+
+        # Set equal aspect ratio
+        ax.set_box_aspect(aspectRatio)
+
+        # Set limits
+        ax.set_xlim(x_limits[0], x_limits[1])
+        ax.set_ylim(y_limits[0], y_limits[1])
+        ax.set_zlim(z_limits[0], z_limits[1])
+
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+        plt.show()
+
+        #calls the plot map function
+
+    def plotMap(self,
+                ax):
 
         obstaclesList = self.map.get_obstacles()
 
@@ -53,27 +82,39 @@ class PlotMapPath:
             #gets the obstacle meshes
             obstacleMeshes = self.getObstacleMeshes(vertices=obstacleVertices_rotated)
             self.meshes_obstacles.append(obstacleMeshes)
-        
 
+            #creates this obstacle 
+            tempObstacle_poly = Poly3DCollection(obstacleMeshes, alpha=1.0, facecolor='blue', edgecolor='k')
+            ax.add_collection3d(tempObstacle_poly)
+
+        
         testPoint = 0
 
     def getObstacleMeshes(self,
                           vertices: list[np.ndarray]):
 
+    
+        #obtains the flattened vertices
+        vert_flat = [vertex.flatten() for vertex in vertices]
             
 
-        meshes = [[vertices[0], vertices[1], vertices[2]],
-                  [vertices[0], vertices[2], vertices[3]],
-                  [vertices[0], vertices[5], vertices[4]],
-                  [vertices[0], vertices[1], vertices[5]],
-                  [vertices[1], vertices[6], vertices[5]],
-                  [vertices[1], vertices[2], vertices[6]],
-                  [vertices[2], vertices[6], vertices[7]],
-                  [vertices[2], vertices[7], vertices[3]],
-                  [vertices[3], vertices[4], vertices[7]],
-                  [vertices[3], vertices[0], vertices[4]],
-                  [vertices[4], vertices[5], vertices[6]],
-                  [vertices[4], vertices[6], vertices[7]]]
+        meshes = [[vert_flat[0], vert_flat[1], vert_flat[2]],
+                  [vert_flat[0], vert_flat[2], vert_flat[3]],
+                  [vert_flat[0], vert_flat[5], vert_flat[4]],
+                  [vert_flat[0], vert_flat[1], vert_flat[5]],
+                  [vert_flat[1], vert_flat[6], vert_flat[5]],
+                  [vert_flat[1], vert_flat[2], vert_flat[6]],
+                  [vert_flat[2], vert_flat[6], vert_flat[7]],
+                  [vert_flat[2], vert_flat[7], vert_flat[3]],
+                  [vert_flat[3], vert_flat[4], vert_flat[7]],
+                  [vert_flat[3], vert_flat[0], vert_flat[4]],
+                  [vert_flat[4], vert_flat[5], vert_flat[6]],
+                  [vert_flat[4], vert_flat[6], vert_flat[7]]]
 
-
+        meshes = [[vert_flat[0],vert_flat[1],vert_flat[2],vert_flat[3]],
+                  [vert_flat[0],vert_flat[1],vert_flat[5],vert_flat[4]],
+                  [vert_flat[0],vert_flat[4],vert_flat[7],vert_flat[3]],
+                  [vert_flat[1],vert_flat[2],vert_flat[6],vert_flat[5]],
+                  [vert_flat[2],vert_flat[3],vert_flat[7],vert_flat[6]],
+                  [vert_flat[4],vert_flat[5],vert_flat[6],vert_flat[7]]]
         return meshes

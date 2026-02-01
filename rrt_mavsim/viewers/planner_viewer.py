@@ -34,8 +34,8 @@ class PlannerViewer:
                                       distance=PLAN.scale, 
                                       elevation=50, 
                                       azimuth=-90)
-        self.window.setBackgroundColor('k')  # set background color to black
-        #self.window.setBackgroundColor('w')  # set background color to black
+        #self.window.setBackgroundColor('k')  # set background color to black
+        self.window.setBackgroundColor('w')  # set background color to white
         # self.window.resize(*(4000, 4000))  # not sure how to resize window
         self.window.show()  # display configured window
         self.window.raise_()  # bring window to the front

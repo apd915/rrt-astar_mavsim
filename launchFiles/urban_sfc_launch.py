@@ -61,6 +61,9 @@ viewer.update_planning_tree(waypoints=waypoints_not_smooth,
 plotter = PlotMapPath(map=worldMap,
                       waypoints_not_smooth=waypoints_not_smooth)
 
-plotter.plotMap()
+plotter.plot(x_limits=CITY.x_limits,
+             y_limits=CITY.y_limits,
+             z_limits=CITY.z_limits,
+             aspectRatio=CITY.aspect_ratio)
 
 testPoint = 0

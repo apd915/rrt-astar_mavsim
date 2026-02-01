@@ -34,3 +34,21 @@ startPosition_3D = map_2D_to_3D_planeMsg(vec_2D=startPosition_2D,
 endPosition_3D = map_2D_to_3D_planeMsg(vec_2D=endPosition_2D,
                                        plane_msg=plane_msg)
 
+
+
+#creates the x, y, and z limits for plotting 
+x_limits = (-200, 2300)
+y_limits = (-200, 2300)
+z_limits = (-200, 500)
+
+x_range = x_limits[1] - x_limits[0]
+y_range = y_limits[1] - y_limits[0]
+z_range = z_limits[1] - z_limits[0]
+
+#gets the max
+max_range = max(x_range, y_range, z_range)
+#creates the list  for the aspect ratio
+aspect_ratio = [x_range/max_range, y_range/max_range, z_range/max_range]
+
+
+#sets the aspect ratio for the plotter
