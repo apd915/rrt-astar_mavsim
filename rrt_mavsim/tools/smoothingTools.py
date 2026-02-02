@@ -144,6 +144,8 @@ def flight_corridors_smooth_path_constrainted(waypoints_not_smooth: MsgWaypoints
 def flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth: MsgWaypoints_SFC,
                                                 world_map: MsgWorldMap):
 
+    #gets the number of dimensions of the waypoints not smooth
+    numDimensions = waypoints_not_smooth.numDimensions
 
     positionPairsList, indicesPairsList = getPositionsPairsList(waypoints_not_smooth=waypoints_not_smooth)
 
@@ -226,6 +228,8 @@ def flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth: MsgWaypoin
     minCostList = getMinPath(allParentsList=allParents)
 
 
+    minCostCorridors = []
+    minCostPositions = []
     #with the min cost list, we need to get the corresponding safe flight corridors,
     #and create smooted waypoints
     for i in range(len(minCostList) - 1):
@@ -235,12 +239,31 @@ def flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth: MsgWaypoin
         #gets the current safe flight corridor from the above list
         listNodes = [currentNode_index, nextNode_index]
         #gets the list index
-        list
+        listIndex = validIndicesPairs_list.index(listNodes)
 
+        #gets the curretn waypoint
+        currentCorridor = flightCorridor_list[listIndex]
+        minCostCorridors.append(currentCorridor)
+
+        if i == 0:
+            minCostPositions.append(currentCorridor.primaryPosition)
+            minCostPositions.append(currentCorridor.secondaryPosition)
+        else:
+            minCostPositions.append(currentCorridor.secondaryPosition)
+
+        testPoint = 0
+
+
+    #turns the corridors list into a waypoints class
+    waypoints_smooth = MsgWaypoints_SFC(numDimensions=numDimensions)
+    waypoints_smooth.flightCorridors = minCostCorridors
+    waypoints_smooth.positions=minCostPositions
 
 
     #gets the 
     testPoint = 0
+
+    return waypoints_smooth
 
 #defines the function to find the angle between two safe flight corridors
 def getSFCAngle_magnitude(sfc_1: MsgFlightCorridor,

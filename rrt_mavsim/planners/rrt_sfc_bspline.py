@@ -138,8 +138,8 @@ class RRT_SFC_BSpline:
         )
 
         #gets the waypoints smooth
-        smoothPath_Dijkstra(waypoints_not_smooth=self.waypoints_not_smooth,
-                            worldMap=self.worldMap)
+        self.waypoints_smooth = smoothPath_Dijkstra(waypoints_not_smooth=self.waypoints_not_smooth,
+                                                    worldMap=self.worldMap)
         # returns the not smooth waypoints
         return self.waypoints_not_smooth
 
@@ -392,10 +392,10 @@ def smoothPath_Dijkstra(waypoints_not_smooth: MsgWaypoints_SFC,
                         worldMap: MsgWorldMap):
 
 
-    flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth=waypoints_not_smooth,
+    waypoints_smooth = flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth=waypoints_not_smooth,
                                                 world_map=worldMap)
     
-    pass
+    return waypoints_smooth
 
 
 #defines helper function to get positions pairs list

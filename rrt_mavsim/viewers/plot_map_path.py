@@ -39,7 +39,15 @@ class PlotMapPath:
         self.plotMap(ax=ax)
 
         if self.waypoints_not_smooth is not None:
-            self.plotWaypoints_notSmooth(ax=ax)
+            self.plotWaypoints(ax=ax,
+                               waypoints=self.waypoints_not_smooth,
+                               color='red')
+
+
+        if self.waypoints_smooth is not None:
+            self.plotWaypoints(ax=ax,
+                               waypoints=self.waypoints_smooth,
+                               color='purple')
 
         # Set equal aspect ratio
         ax.set_box_aspect(aspectRatio)
@@ -56,11 +64,13 @@ class PlotMapPath:
 
         #calls the plot map function
 
-    def plotWaypoints_notSmooth(self,
-                                ax):
+    def plotWaypoints(self,
+                      ax,
+                      waypoints: MsgWaypoints_SFC,
+                      color: str):
 
         #from the waypoints not smooth, we get the list of all safe flight corridors 
-        safeFlightCorridors_list = self.waypoints_not_smooth.getAllFlightCorridors()
+        safeFlightCorridors_list = waypoints.getAllFlightCorridors()
 
         #iterates over all of the flight corridors
         for safeFlightCorridor in safeFlightCorridors_list:
@@ -86,7 +96,7 @@ class PlotMapPath:
             z_component = vertRot[2,:]
             
 
-            ax.plot(x_component, y_component, z_component, color='red', linewidth=2)
+            ax.plot(x_component, y_component, z_component, color=color, linewidth=2)
 
             #
 

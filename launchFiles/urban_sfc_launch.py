@@ -49,6 +49,7 @@ path_gen.generateSFCPaths(startPosition_3D=CITY.startPosition_3D,
                           segmentLength=FLIGHT.segmentLength)
 
 waypoints_not_smooth = path_gen.getWaypointsNotSmooth()
+waypoints_smooth = path_gen.getWaypointsSmooth()
 tree = path_gen.getTree()
 controlPoints = path_gen.generateControlPoints(waypoints=waypoints_not_smooth,
                                                numPointsPerUnit=int(FLIGHT.numPoints_perUnit))
@@ -61,6 +62,7 @@ viewer.update_planning_tree(waypoints=waypoints_not_smooth,
 
 plotter = PlotMapPath(map=worldMap,
                       waypoints_not_smooth=waypoints_not_smooth,
+                      waypoints_smooth=waypoints_smooth,
                       plane=CITY.plane_msg)
 
 plotter.plot(x_limits=CITY.x_limits,
