@@ -233,7 +233,9 @@ def flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth: MsgWaypoin
         nextNode_index = minCostList[i+1]
 
         #gets the current safe flight corridor from the above list
-        nodeValue = [currentNode_index, nextNode_index]
+        listNodes = [currentNode_index, nextNode_index]
+        #gets the list index
+        list
 
 
 
