@@ -8,8 +8,10 @@ from rrt_mavsim.message_types.msg_world_map import MsgWorldMap
 from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 import rrt_mavsim.parameters.plotter_parameters as PLOT
+from rrt_mavsim.message_types.msg_plane import MsgPlane
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+from copy import deepcopy
 
 
 class PlotMapPath:
@@ -17,10 +19,12 @@ class PlotMapPath:
     def __init__(self,
                  map: MsgWorldMap,
                  waypoints_not_smooth: MsgWaypoints_SFC = None,
-                 waypoints_smooth: MsgWaypoints_SFC = None):
+                 waypoints_smooth: MsgWaypoints_SFC = None,
+                 plane: MsgPlane = None):
         self.map = map
         self.waypoints_not_smooth = waypoints_not_smooth
         self.waypoints_smooth = waypoints_smooth
+        self.plane = plane
 
     def plot(self,
              x_limits: tuple,
@@ -33,6 +37,9 @@ class PlotMapPath:
         
 
         self.plotMap(ax=ax)
+
+        if self.waypoints_not_smooth is not None:
+            self.plotWaypoints_notSmooth(ax=ax)
 
         # Set equal aspect ratio
         ax.set_box_aspect(aspectRatio)
@@ -48,6 +55,46 @@ class PlotMapPath:
         plt.show()
 
         #calls the plot map function
+
+    def plotWaypoints_notSmooth(self,
+                                ax):
+
+        #from the waypoints not smooth, we get the list of all safe flight corridors 
+        safeFlightCorridors_list = self.waypoints_not_smooth.getAllFlightCorridors()
+
+        #iterates over all of the flight corridors
+        for safeFlightCorridor in safeFlightCorridors_list:
+
+            #gets the normals and vertices
+            normalsList, vertices_list = safeFlightCorridor.getNormalsVertices_3D(plane=self.plane)
+
+
+            verticesListCopy = deepcopy(vertices_list)
+
+            #creates the augmented vertices list to add the first point in the vertices List duplicated to the ending point
+            #we do this so as to complete the circuit for the drawing.
+            verticesListCopy.append(verticesListCopy[0])
+
+            #concatenates together the verticesList into an array so we can plot the positions out
+            vertices = np.concatenate((verticesListCopy), axis=1)
+
+            #gets the vertices rotated into the altitude frame (out of the NED frame merely for plotting purposes)
+            vertRot = PLOT.R_NED_to_Altitude @ vertices
+
+            x_component = vertRot[0,:]
+            y_component = vertRot[1,:]
+            z_component = vertRot[2,:]
+            
+
+            ax.plot(x_component, y_component, z_component, color='red', linewidth=2)
+
+            #
+
+            testPoint = 0
+
+
+        testPoint = 0
+
 
     def plotMap(self,
                 ax):
@@ -96,20 +143,6 @@ class PlotMapPath:
     
         #obtains the flattened vertices
         vert_flat = [vertex.flatten() for vertex in vertices]
-            
-
-        meshes = [[vert_flat[0], vert_flat[1], vert_flat[2]],
-                  [vert_flat[0], vert_flat[2], vert_flat[3]],
-                  [vert_flat[0], vert_flat[5], vert_flat[4]],
-                  [vert_flat[0], vert_flat[1], vert_flat[5]],
-                  [vert_flat[1], vert_flat[6], vert_flat[5]],
-                  [vert_flat[1], vert_flat[2], vert_flat[6]],
-                  [vert_flat[2], vert_flat[6], vert_flat[7]],
-                  [vert_flat[2], vert_flat[7], vert_flat[3]],
-                  [vert_flat[3], vert_flat[4], vert_flat[7]],
-                  [vert_flat[3], vert_flat[0], vert_flat[4]],
-                  [vert_flat[4], vert_flat[5], vert_flat[6]],
-                  [vert_flat[4], vert_flat[6], vert_flat[7]]]
 
         meshes = [[vert_flat[0],vert_flat[1],vert_flat[2],vert_flat[3]],
                   [vert_flat[0],vert_flat[1],vert_flat[5],vert_flat[4]],
@@ -118,3 +151,5 @@ class PlotMapPath:
                   [vert_flat[2],vert_flat[3],vert_flat[7],vert_flat[6]],
                   [vert_flat[4],vert_flat[5],vert_flat[6],vert_flat[7]]]
         return meshes
+
+    

@@ -59,7 +59,8 @@ viewer.update_planning_tree(waypoints=waypoints_not_smooth,
                             plane=CITY.plane_msg)
 
 plotter = PlotMapPath(map=worldMap,
-                      waypoints_not_smooth=waypoints_not_smooth)
+                      waypoints_not_smooth=waypoints_not_smooth,
+                      plane=CITY.plane_msg)
 
 plotter.plot(x_limits=CITY.x_limits,
              y_limits=CITY.y_limits,
