@@ -29,7 +29,8 @@ path_gen = RRT_SFC_BSpline(numDimensions=CITY.numDimensions,
                            rho=FLIGHT.rho,
                            step_length=FLIGHT.segmentLength,
                            numDesiredInitPaths=FLIGHT.numInitialPaths,
-                           plane=CITY.plane_msg)
+                           plane=CITY.plane_msg,
+                           chiMax=FLIGHT.Chi_max)
 
 
 

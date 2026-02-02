@@ -35,5 +35,10 @@ finalPosition_3D = np.array([[PLAN.city_width],[PLAN.city_width],[-PLAN.city_wid
 
 #sets the width of the SFC
 width = 150.0
-#sets the height of the SFC
+#sets the height of the SFC (used only for 3D)
 height = 150.0
+
+#using the minimum turning radius and the width, we get the maximum angle between Safe flight Corridors
+#for them to be allowed to be added to 
+gamma_min = np.arcsin((MinTurnRadius-width)/(MinTurnRadius))
+Chi_max = np.pi - 2.0*gamma_min

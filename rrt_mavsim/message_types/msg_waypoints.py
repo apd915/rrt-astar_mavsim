@@ -90,3 +90,9 @@ class MsgWaypoints_SFC:
         return (self.flightCorridors)[index]
 
 
+    #gets the number of nodes in the tree
+    def getNumNodes(self):
+        return len(self.positions)
+
+
+

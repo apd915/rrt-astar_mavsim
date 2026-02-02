@@ -28,7 +28,7 @@ import heapq
 from rrt_mavsim.message_types.msg_plane import MsgPlane
 
 from rrt_mavsim.tools.smoothingTools import *
-
+from rrt_mavsim.tools.smoothingTools import getSFCAngle_magnitude
 
 class RRT_SFC_BSpline:
     # creates the init function
@@ -42,6 +42,7 @@ class RRT_SFC_BSpline:
         step_length: float,
         numDesiredInitPaths: int,
         plane: MsgPlane,
+        chiMax: float #The maximum angle between safe flight corridors
     ):
         # saves all of them
         self.numDimensions = numDimensions
@@ -53,6 +54,8 @@ class RRT_SFC_BSpline:
         self.numDesiredInitPaths = numDesiredInitPaths
 
         self.plane = plane
+
+        self.chiMax = chiMax
 
         # creates the B-Splines
         self.bsplineParam = BsplineParameters()
@@ -134,6 +137,9 @@ class RRT_SFC_BSpline:
             tree=self.tree, endPosition=endPosition_2D
         )
 
+        #gets the waypoints smooth
+        smoothPath_Dijkstra(waypoints_not_smooth=self.waypoints_not_smooth,
+                            worldMap=self.worldMap)
         # returns the not smooth waypoints
         return self.waypoints_not_smooth
 
@@ -195,14 +201,39 @@ class RRT_SFC_BSpline:
                 numDimensions=self.numDimensions,
             )
 
+
+            #section to make sure the corridor satisfies turn constraints
+            #at least as best as we can figure.
+            #initializes the flag to true
+            satisfiesTurnConstraints = True
+
+            #gets the min cost corridor parent index, if the the min cost parent inde
+            #(for position) is not zero
+            if candidate_minCostParentIndex != 0:
+                candidate_minCostCorridorParentIndex = candidate_minCostParentIndex - 1
+                
+                #gets the min cost parent corridor
+                minCost_parentCorridor = self.tree.getFlightCorridor(index=candidate_minCostCorridorParentIndex)
+
+                #gets the angle between these two
+                corridorAngle = getSFCAngle_magnitude(sfc_1=minCost_parentCorridor,
+                                                      sfc_2=sfc_candidate)
+                
+                if corridorAngle > self.chiMax:
+
+                    satisfiesTurnConstraints = False
+
+
+                testPoint = 0
+
             # calls the function to check for intersection
             intersectionHappened = intersectionDetected(
                 corridor=sfc_candidate, world_map=self.worldMap
             )
             intersectionHappened_list.append(intersectionHappened)
 
-            # if no intersection happened, add the canditdate to the tree
-            if intersectionHappened is False:
+            # if no intersection happened, and satisfies turn constraints add the canditdate to the tree
+            if (intersectionHappened is False) and satisfiesTurnConstraints:
                 self.tree.add(
                     position=newPositionCandidate,
                     parent=candidate_minCostParentIndex,
@@ -360,6 +391,10 @@ def generateRandomPosition_3D(worldMap: MsgWorldMap):
 def smoothPath_Dijkstra(waypoints_not_smooth: MsgWaypoints_SFC,
                         worldMap: MsgWorldMap):
 
+
+    flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth=waypoints_not_smooth,
+                                                world_map=worldMap)
+    
     pass
 
 

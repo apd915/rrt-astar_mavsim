@@ -10,7 +10,7 @@ import numpy as np
 
 #this function smooths the paths, and does it a bit different than the original
 #algorithm. This checks for more combinations along the way.
-def flight_corridors_smooth_path(waypoints_not_smooth: MsgWaypoints_SFC,
+def flight_corridors_smooth_path_constrainted(waypoints_not_smooth: MsgWaypoints_SFC,
                                      world_map: MsgWorldMap,
                                      angle_max: float)->MsgWaypoints_SFC:
     #gets the waypoints positions
@@ -140,10 +140,105 @@ def flight_corridors_smooth_path(waypoints_not_smooth: MsgWaypoints_SFC,
             potato = 0
     potato = 0
 
+#smooths the path, but without taking into account the angle between flight corridors
+def flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth: MsgWaypoints_SFC,
+                                                world_map: MsgWorldMap):
+
+
+    positionPairsList, indicesPairsList = getPositionsPairsList(waypoints_not_smooth=waypoints_not_smooth)
+
+
+    validPositionsPairs_list, validIndicesPairs_list, flightCorridor_list, cost_list = getValidPositionsPairs(positionsPairs_list=positionPairsList,
+                                                                                                    indicesPairs_list=indicesPairsList,
+                                                                                                    world_map=world_map)
+    #gets the grouped indices
+    groupedIndices = organizeIndicesPairs(indicesPairsList=validIndicesPairs_list)
+    #gets the total number of nodes
+    numNodes = waypoints_not_smooth.getNumNodes()
+    #creates the set of indices as the unvisited list
+    unvisited = set(range(0,numNodes))
+
+    #creates the list of all nodes and their parents and costs
+    allNodes = list(unvisited)
+    allCosts = [np.inf] * numNodes
+    allParents = [np.inf] * numNodes
+
+    #gets the ending node
+    endingNode = allNodes[-1]
+
+    #sets the node zero as the parent
+    allCosts[0] = 0.0
+
+    #goes through while there are unvisited nodes
+    while unvisited:
+
+        #gets the minimum cost of the unvisited nodes
+        minCost = np.inf
+        minCostNode = 0
+
+        for node in unvisited:
+            #gets the cost
+            tempCost = allCosts[node]
+            if tempCost < minCost:
+                minCost = tempCost
+                minCostNode = node
+
+        #because of the way I have this structured, there are no nodes connecting to the last way
+        #so, we skip the step, and say that it's been visited already
+        if minCostNode != endingNode:
+        
+            #gets the connecting nodes for the min cost unvisited node
+            connectingNodes_list = groupedIndices[minCostNode]
+
+            #iterates all of the connecting nodes
+            for connectingNode in connectingNodes_list:
+
+                #gets the pair
+                tempPair = [minCostNode, connectingNode]
+
+                pairIndex = validIndicesPairs_list.index(tempPair)
+
+                #gets the connectionCost to the next node
+                connectionCost = cost_list[pairIndex]
+
+                #gets the cost of the current node
+                currentNodeCost = allCosts[minCostNode]
+
+                #gets the next node cose as sum of the two above
+                nextNodeCost = currentNodeCost + connectionCost
+
+                #checks if this cost is less than the current cost for that node in the table
+                if nextNodeCost < allCosts[connectingNode]:
+                    #if this is the case, we set the current node as that next node's parent
+                    #and save this cost
+                    allCosts[connectingNode] = nextNodeCost
+                    allParents[connectingNode] = minCostNode
+
+
+                
+                testPoint = 0
+
+        #removes the current node from the unvisited list
+        unvisited.discard(minCostNode)
+
+
+    #gets the path list
+    minCostList = getMinPath(allParentsList=allParents)
+
+
+    #with the min cost list, we need to get the corresponding safe flight corridors,
+    #and create smooted waypoints
+    for i in range(len(minCostList) - 1):
+        currentNode_index = minCostList[i]
+        nextNode_index = minCostList[i+1]
+
+        #gets the current safe flight corridor from the above list
+        nodeValue = [currentNode_index, nextNode_index]
 
 
 
-
+    #gets the 
+    testPoint = 0
 
 #defines the function to find the angle between two safe flight corridors
 def getSFCAngle_magnitude(sfc_1: MsgFlightCorridor,
@@ -169,8 +264,6 @@ def getSFCAngle_magnitude(sfc_1: MsgFlightCorridor,
 
     #return theta
     return theta
-
-
 
 #defines helper function to get positions pairs list
 def getPositionsPairsList(waypoints_not_smooth: MsgWaypoints_SFC):
@@ -212,7 +305,6 @@ def getPositionsPairsList(waypoints_not_smooth: MsgWaypoints_SFC):
 def getValidPositionsPairs(positionsPairs_list: list[list[np.ndarray]],
                            indicesPairs_list: list[list[int]],
                            world_map: MsgWorldMap):
-
 
         validPositions_list = []
         validIndices_list = []
@@ -262,3 +354,40 @@ def getValidPositionsPairs(positionsPairs_list: list[list[np.ndarray]],
                 cost_list.append(tempCorridor_cost)
         
         return validPositions_list, validIndices_list, flightCorridor_list, cost_list
+
+
+
+def organizeIndicesPairs(indicesPairsList: list[list[int]]):
+
+    indicesGroups = {}
+    for a, b in indicesPairsList:
+
+        indicesGroups.setdefault(a,[]).append(b)
+
+
+    return indicesGroups
+
+
+#helper function to go through and get the min path
+def getMinPath(allParentsList: list):
+
+    currentNodeIndex = int(len(allParentsList) - 1)
+    finished = False
+
+    minCostList = []
+    minCostList.append(currentNodeIndex)
+
+    while currentNodeIndex != 0:
+
+        currentNodeIndex = allParentsList[currentNodeIndex]
+
+        minCostList.append(currentNodeIndex)
+
+    #reverses the minCostList
+    minCostList.reverse()
+
+
+    return minCostList
+
+        
+
