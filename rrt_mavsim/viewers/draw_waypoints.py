@@ -22,7 +22,7 @@ class DrawWaypoints:
     def __init__(self,
                  waypoints: MsgWaypoints_SFC,
                  window: gl.GLViewWidget,
-                 lineColor: np.ndarray = red,
+                 lineColor: tuple = red,
                  plane: MsgPlane = None):
 
 

@@ -72,7 +72,7 @@ controlPoints = planner.generateControlPoints(
 )
 
 viewerManager.update_planning_tree(
-    waypoints=waypointsNotSmooth,
+    waypoints_not_smooth=waypointsNotSmooth,
     tree=tree,
     world_map=worldMap,
     optimizedControlPoints=controlPoints,

@@ -11,6 +11,11 @@ import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PLAN
 from rrt_mavsim.viewers.draw_waypoints import DrawWaypoints
 from rrt_mavsim.viewers.drawEndPoints import DrawEndMarker
 from rrt_mavsim.message_types.msg_plane import MsgPlane
+from rrt_mavsim.viewers.drawPath import DrawPath
+
+
+red = (1.0, 0.0, 0.0, 1.0)
+purple = (170/255, 0, 1.0, 1.0)
 
 
 class PlannerViewer:
@@ -45,7 +50,7 @@ class PlannerViewer:
     def draw_tree_and_map(self,
                           worldMap: MsgWorldMap,
                           tree: MsgWaypoints_SFC,
-                          waypoints: MsgWaypoints_SFC,
+                          waypoints_smooth: MsgWaypoints_SFC,
                           waypoints_not_smooth: MsgWaypoints_SFC,
                           optimizedControlPoints: np.ndarray = None,
                           plane: MsgPlane = None):
@@ -53,11 +58,21 @@ class PlannerViewer:
         DrawMap(map=worldMap,
                 window=self.window)
         
+
         #draws the waypoints out
-        DrawWaypoints(waypoints=waypoints,
+        DrawWaypoints(waypoints=waypoints_not_smooth,
                       window=self.window,
-                      plane=plane)
+                      plane=plane,
+                      lineColor=red)
         
+        #draws the waypoints out
+        DrawWaypoints(waypoints=waypoints_smooth,
+                      window=self.window,
+                      plane=plane,
+                      lineColor=purple)
+        
+        DrawPath(controlPoints=optimizedControlPoints,
+                 window=self.window,)
 
     def draw_map(self,
                  worldMap: MsgWorldMap):

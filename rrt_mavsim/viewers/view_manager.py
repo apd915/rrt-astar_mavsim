@@ -21,7 +21,8 @@ class ViewManager:
 
     def update_planning_tree(
         self,
-        waypoints: MsgWaypoints_SFC,
+        waypoints_not_smooth: MsgWaypoints_SFC,
+        waypoints_smooth: MsgWaypoints_SFC,
         tree: MsgWaypoints_SFC,
         world_map: MsgWorldMap,
         optimizedControlPoints: np.ndarray,
@@ -30,9 +31,9 @@ class ViewManager:
         self.planner_viewer.draw_tree_and_map(
             worldMap=world_map,
             tree=tree,
-            waypoints=waypoints,
+            waypoints_smooth=waypoints_smooth,
             optimizedControlPoints=optimizedControlPoints,
-            waypoints_not_smooth=waypoints,
+            waypoints_not_smooth=waypoints_not_smooth,
             plane=plane
         )
 
