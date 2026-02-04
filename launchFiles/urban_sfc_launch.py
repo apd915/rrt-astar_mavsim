@@ -52,11 +52,14 @@ waypoints_not_smooth = path_gen.getWaypointsNotSmooth()
 waypoints_smooth = path_gen.getWaypointsSmooth()
 tree = path_gen.getTree()
 controlPoints = path_gen.generateControlPoints(waypoints=waypoints_not_smooth,
-                                               numPointsPerUnit=int(FLIGHT.numPoints_perUnit))
+                                               numPointsPerUnit=FLIGHT.numPoints_perUnit)
 
 viewer.update_planning_tree(waypoints_not_smooth=waypoints_not_smooth,
                             waypoints_smooth=waypoints_smooth,
                             tree=tree,
+                            degree=CITY.degree,
+                            numdimensions=CITY.numDimensions,
+                            R_ned_to_alt=CITY.R,
                             world_map=worldMap,
                             optimizedControlPoints=controlPoints,
                             plane=CITY.plane_msg)

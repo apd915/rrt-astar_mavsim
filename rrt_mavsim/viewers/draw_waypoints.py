@@ -22,9 +22,12 @@ class DrawWaypoints:
     def __init__(self,
                  waypoints: MsgWaypoints_SFC,
                  window: gl.GLViewWidget,
+                 R_ned_to_alt: np.ndarray,
                  lineColor: tuple = red,
                  plane: MsgPlane = None):
 
+        #saves the Rotation matrix, which is the rotation from NED to altitude frame
+        self.R_ned_to_alt = R_ned_to_alt
 
         #gets the dimension
         numDimensions = waypoints.numDimensions
@@ -65,8 +68,8 @@ class DrawWaypoints:
             nextVertex = vertices_list[(i+1)%numVertices]
 
             #gets them in the rotated frame
-            currentVertex_rotated = R @ currentVertex
-            nextVertex_rotated = R @ nextVertex
+            currentVertex_rotated = self.R_ned_to_alt @ currentVertex
+            nextVertex_rotated = self.R_ned_to_alt @ nextVertex
 
             #gets the edge concatenateion
             edge_concatenated = np.concatenate((currentVertex_rotated.T, nextVertex_rotated.T), axis=0)

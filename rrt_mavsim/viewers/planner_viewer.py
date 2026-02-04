@@ -16,6 +16,9 @@ from rrt_mavsim.viewers.drawPath import DrawPath
 
 red = (1.0, 0.0, 0.0, 1.0)
 purple = (170/255, 0, 1.0, 1.0)
+yellow = (1.0, 1.0, 0.0, 1.0)
+green = (0, 153/255, 0, 1.0)
+orange = (204/255, 102/255, 0.0, 1.0)
 
 
 class PlannerViewer:
@@ -49,7 +52,10 @@ class PlannerViewer:
 
     def draw_tree_and_map(self,
                           worldMap: MsgWorldMap,
+                          degree: int,
+                          dimension: int,
                           tree: MsgWaypoints_SFC,
+                          R_ned_to_alt: np.ndarray,
                           waypoints_smooth: MsgWaypoints_SFC,
                           waypoints_not_smooth: MsgWaypoints_SFC,
                           optimizedControlPoints: np.ndarray = None,
@@ -61,18 +67,27 @@ class PlannerViewer:
 
         #draws the waypoints out
         DrawWaypoints(waypoints=waypoints_not_smooth,
+                      R_ned_to_alt=R_ned_to_alt,
                       window=self.window,
                       plane=plane,
                       lineColor=red)
         
         #draws the waypoints out
         DrawWaypoints(waypoints=waypoints_smooth,
+                      R_ned_to_alt=R_ned_to_alt,
                       window=self.window,
                       plane=plane,
                       lineColor=purple)
         
         DrawPath(controlPoints=optimizedControlPoints,
-                 window=self.window,)
+                 window=self.window,
+                 R_ned_to_alt=R_ned_to_alt,
+                 degree=degree,
+                 lineColor=green,
+                 lineWidth=2.0,
+                 pointWidth=4.0,
+                 plane=plane,
+                 numDimensions=dimension)
 
     def draw_map(self,
                  worldMap: MsgWorldMap):

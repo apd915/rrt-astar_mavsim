@@ -4,6 +4,9 @@ from rrt_mavsim.tools.plane_projections import map_2D_to_3D_planeMsg
 
 #sets the number of dimensions for this algorithm
 numDimensions = 2
+degree = 3
+
+
 
 # create random city map
 city_width      = 2000.  # the city is of size (width)x(width)
@@ -33,8 +36,7 @@ startPosition_3D = map_2D_to_3D_planeMsg(vec_2D=startPosition_2D,
                                          plane_msg=plane_msg)
 endPosition_3D = map_2D_to_3D_planeMsg(vec_2D=endPosition_2D,
                                        plane_msg=plane_msg)
-
-
+R = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
 
 #creates the x, y, and z limits for plotting 
 x_limits = (-200, 2300)

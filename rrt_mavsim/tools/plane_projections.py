@@ -63,7 +63,14 @@ def map_2D_to_3D_planeMsg(vec_2D: np.ndarray,
     
     Q = getPlaneBasis(n_hat=plane_msg.n_hat)
 
-    pos_3D = plane_msg.origin_3D + Q @ vec_2D
+    #gets the shape of the 2D vector
+    vec_shape = np.shape(vec_2D)
+    numVectors = vec_shape[1]
+    
+    #gets the origin tiled
+    origin_tiled = np.repeat(plane_msg.origin_3D, numVectors, axis=1)
+
+    pos_3D = origin_tiled + Q @ vec_2D
 
     return pos_3D
 
