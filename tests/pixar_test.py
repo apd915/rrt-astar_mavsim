@@ -8,6 +8,7 @@ origin = np.array([[0.0],[0.0],[0.0]])
 
 #creates the plane message
 plane = MsgPlane(n_hat=n_hat, origin_3D=origin)
+Q = plane.Q
 
 
 testPoint =0

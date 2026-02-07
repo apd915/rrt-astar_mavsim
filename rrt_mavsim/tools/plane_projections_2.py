@@ -64,5 +64,22 @@ def map_2D_to_3D(vec_2D: np.ndarray,
     
     return vec_3D
 
+#maps a 3D vector in space to the plane. if the 3D vector does not 
+#align with the plane already, it will be projected onto the plane and then 
+#simulatenously mapped to the plane
+def map_3D_to_2D(vec_3D: np.ndarray,
+                 plane: MsgPlane):
+
+
+    #gets the Q matrix from n_hat
+    Q = plane.Q
+
+    #gets the moore penrose pseudoinverse of Q
+    Q_plus = np.linalg.pinv(a=Q)
+    #gets the position in the 2D reference
+    pos_2D = Q_plus @ (vec_3D - plane.origin_3D)
+
+    #returns the 2D position
+    return pos_2D
 
 
