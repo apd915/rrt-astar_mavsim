@@ -9,4 +9,9 @@ class MsgPlane:
     def __init__(self, n_hat: np.ndarray, origin_3D: np.ndarray):
         self.n_hat = n_hat
         self.origin_3D = origin_3D
+        
+        from rrt_mavsim.tools.plane_projections_2 import getNormalBasis
+        #gets the Q matrix
+        self.Q = getNormalBasis(n_hat=self.n_hat)
+
 
