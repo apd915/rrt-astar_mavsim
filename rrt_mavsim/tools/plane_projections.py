@@ -112,6 +112,7 @@ def map_3D_to_2D_planeMsg(vec_3D: np.ndarray,
 
 def getPlaneBasis(n_hat: np.ndarray):
 
+    #normalizes itself as a precaution. If it's zero, it will probably give an error
     n_hat = n_hat / np.linalg.norm(n_hat)
 
     #gets the cross product between e3 and n hat
@@ -149,6 +150,8 @@ def getPlaneBasis(n_hat: np.ndarray):
         u2 = np.cross(n_hat.flatten(), u1.flatten()).reshape(PROJ.vector_shape)
         #normalizes it just in case
         u2 = u2 / np.linalg.norm(u2)
+
+        testPoint = 0
 
     #creates the Q vector
     Q = np.concatenate((u1, u2), axis=1)

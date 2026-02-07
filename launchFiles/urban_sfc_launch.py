@@ -32,8 +32,6 @@ path_gen = RRT_SFC_BSpline(numDimensions=CITY.numDimensions,
                            plane=CITY.plane_msg,
                            chiMax=FLIGHT.Chi_max)
 
-
-
 #creates the city parameters
 city_params = CityParams(plane=CITY.plane_msg)
 worldMap = MsgWorldMap(obstacleFieldType=MapTypes.CITY,
@@ -41,7 +39,6 @@ worldMap = MsgWorldMap(obstacleFieldType=MapTypes.CITY,
                        cityParams=city_params)
 
 viewer.drawMap(world_map=worldMap)
-
 
 path_gen.generateSFCPaths(startPosition_3D=CITY.startPosition_3D,
                           endPosition_3D=CITY.endPosition_3D,
