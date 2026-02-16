@@ -30,6 +30,7 @@ from rrt_mavsim.message_types.msg_plane import MsgPlane
 from rrt_mavsim.tools.smoothingTools import *
 from rrt_mavsim.tools.smoothingTools import getSFCAngle_magnitude
 
+
 class RRT_SFC_BSpline:
     # creates the init function
     def __init__(
@@ -42,7 +43,7 @@ class RRT_SFC_BSpline:
         step_length: float,
         numDesiredInitPaths: int,
         plane: MsgPlane,
-        chiMax: float #The maximum angle between safe flight corridors
+        chiMax: float,  # The maximum angle between safe flight corridors
     ):
         # saves all of them
         self.numDimensions = numDimensions
@@ -86,8 +87,7 @@ class RRT_SFC_BSpline:
         elif self.numDimensions == 3:
             return self.__generatePaths_3D()
 
-    def generateControlPoints(
-        self, waypoints: MsgWaypoints_SFC, numPointsPerUnit: int):
+    def generateControlPoints(self, waypoints: MsgWaypoints_SFC, numPointsPerUnit: int):
         self.bsplineGen = BSplineGenerator(
             numDimensions=self.numDimensions, degree=self.degree, M=self.M
         )
@@ -136,9 +136,10 @@ class RRT_SFC_BSpline:
             tree=self.tree, endPosition=endPosition_2D
         )
 
-        #gets the waypoints smooth
-        self.waypoints_smooth = smoothPath_Dijkstra(waypoints_not_smooth=self.waypoints_not_smooth,
-                                                    worldMap=self.worldMap)
+        # gets the waypoints smooth
+        self.waypoints_smooth = smoothPath_Dijkstra(
+            waypoints_not_smooth=self.waypoints_not_smooth, worldMap=self.worldMap
+        )
         # returns the not smooth waypoints
         return self.waypoints_not_smooth
 
@@ -200,28 +201,28 @@ class RRT_SFC_BSpline:
                 numDimensions=self.numDimensions,
             )
 
-
-            #section to make sure the corridor satisfies turn constraints
-            #at least as best as we can figure.
-            #initializes the flag to true
+            # section to make sure the corridor satisfies turn constraints
+            # at least as best as we can figure.
+            # initializes the flag to true
             satisfiesTurnConstraints = True
 
-            #gets the min cost corridor parent index, if the the min cost parent inde
-            #(for position) is not zero
+            # gets the min cost corridor parent index, if the the min cost parent inde
+            # (for position) is not zero
             if candidate_minCostParentIndex != 0:
                 candidate_minCostCorridorParentIndex = candidate_minCostParentIndex - 1
-                
-                #gets the min cost parent corridor
-                minCost_parentCorridor = self.tree.getFlightCorridor(index=candidate_minCostCorridorParentIndex)
 
-                #gets the angle between these two
-                corridorAngle = getSFCAngle_magnitude(sfc_1=minCost_parentCorridor,
-                                                      sfc_2=sfc_candidate)
-                
+                # gets the min cost parent corridor
+                minCost_parentCorridor = self.tree.getFlightCorridor(
+                    index=candidate_minCostCorridorParentIndex
+                )
+
+                # gets the angle between these two
+                corridorAngle = getSFCAngle_magnitude(
+                    sfc_1=minCost_parentCorridor, sfc_2=sfc_candidate
+                )
+
                 if corridorAngle > self.chiMax:
-
                     satisfiesTurnConstraints = False
-
 
                 testPoint = 0
 
@@ -296,7 +297,6 @@ class RRT_SFC_BSpline:
 def generateRandomCandidate(
     world_map: MsgWorldMap, tree: MsgWaypoints_SFC, segmentLength: float
 ):
-
     # case map is 2D
     if world_map.numDimensions_algorithm == 2:
         # gets a 2D random position here in the tree
@@ -305,7 +305,6 @@ def generateRandomCandidate(
         # gets a 3D random position here in the tree
         randomPosition = generateRandomPosition_3D(worldMap=world_map)
     else:
-
         raise ValueError(f"Unsupported dimension: {world_map.numDimensions_algorithm}")
 
     # gets the tree positions
@@ -386,46 +385,41 @@ def generateRandomPosition_3D(worldMap: MsgWorldMap):
     return random_position
 
 
-#generates the smoothed waypoints using dijkstra's algorithm
-def smoothPath_Dijkstra(waypoints_not_smooth: MsgWaypoints_SFC,
-                        worldMap: MsgWorldMap):
+# generates the smoothed waypoints using dijkstra's algorithm
+def smoothPath_Dijkstra(waypoints_not_smooth: MsgWaypoints_SFC, worldMap: MsgWorldMap):
+    waypoints_smooth = flight_corridors_smooth_path_unconstrainted(
+        waypoints_not_smooth=waypoints_not_smooth, world_map=worldMap
+    )
 
-
-    waypoints_smooth = flight_corridors_smooth_path_unconstrainted(waypoints_not_smooth=waypoints_not_smooth,
-                                                world_map=worldMap)
-    
     return waypoints_smooth
 
 
-#defines helper function to get positions pairs list
-def getPositionsPairsList(waypoints_not_smooth: MsgWaypoints):
-
-    #gets all the positions in the corridor list
-    corridorPositions_list = waypoints_not_smooth.getAllPositionsList()
-    #gets  the length of the corridor positions list
+# defines helper function to get positions pairs list
+def getPositionsPairsList(waypoints_not_smooth: MsgWaypoints_SFC):
+    # gets all the positions in the corridor list
+    corridorPositions_list = waypoints_not_smooth.getAllPositions()
+    # gets  the length of the corridor positions list
     corridorPositions_len = len(corridorPositions_list)
 
-    #creates the list of pairs of positions
+    # creates the list of pairs of positions
     positionsPairs_list = []
 
     indices_list = []
 
-    #section to get all the combinations of the positions list
+    # section to get all the combinations of the positions list
     for i in range(corridorPositions_len - 1):
-
-        #gets the start position
+        # gets the start position
         start_position = corridorPositions_list[i]
 
-        #then iterates over the positions after i
+        # then iterates over the positions after i
         for j in range((i + 1), corridorPositions_len):
-
             end_position = corridorPositions_list[j]
 
-            #creates the tuple and saves it
+            # creates the tuple and saves it
             tempList = [start_position, end_position]
 
             positionsPairs_list.append(tempList)
 
-            indices_list.append([i,j])
+            indices_list.append([i, j])
 
     return positionsPairs_list, indices_list
