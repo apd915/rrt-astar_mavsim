@@ -87,7 +87,7 @@ class RRT_SFC_BSpline:
             return self.__generatePaths_3D()
 
     def generateControlPoints(
-        self, waypoints: MsgWaypoints_SFC, numPointsPerUnit: int):
+        self, waypoints: MsgWaypoints_SFC, numPointsPerUnit: float):
         self.bsplineGen = BSplineGenerator(
             numDimensions=self.numDimensions, degree=self.degree, M=self.M
         )

@@ -22,9 +22,9 @@ class DrawWaypoints:
     def __init__(self,
                  waypoints: MsgWaypoints_SFC,
                  window: gl.GLViewWidget,
+                 plane: MsgPlane,
                  R_ned_to_alt: np.ndarray,
-                 lineColor: tuple = red,
-                 plane: MsgPlane = None):
+                 lineColor: tuple = red):
 
         #saves the Rotation matrix, which is the rotation from NED to altitude frame
         self.R_ned_to_alt = R_ned_to_alt
