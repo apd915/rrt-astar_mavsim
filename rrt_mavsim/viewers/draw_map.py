@@ -49,8 +49,6 @@ class DrawMap:
                 rotatedVertex = R @ obstacleVertex
                 obstacleVertices_rotated.append(rotatedVertex)
 
-                
-
             obstacleMeshes, obstacleMeshColors = self.building_meshes_colors(vertices=obstacleVertices_rotated)
 
             #concatenates the full meshes and colors

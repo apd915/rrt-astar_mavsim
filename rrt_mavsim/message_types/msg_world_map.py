@@ -9,7 +9,7 @@ from scipy.optimize import linprog
 import time
 from enum import Enum
 from rrt_mavsim.tools.getEulerUnit import getRotFromUnitVec, getRotFromPlane
-from rrt_mavsim.tools.plane_projections import *
+from rrt_mavsim.tools.plane_projections_2 import map_3D_to_2D, map_2D_to_3D, projectPosition_toPlane
 from rrt_mavsim.message_types.msg_plane import MsgPlane
 
 
@@ -21,6 +21,7 @@ class MapTypes(str, Enum):
     PLANAR_VTOL = 'PlanarVTOL'
     MAZE = 'Maze'
     PLANAR_VTOL_SIMPLIFIED = 'PlanarVTOLSimplified'
+
 
 
 class CityParams:
@@ -67,14 +68,12 @@ class CityParams:
 class PlanarVTOLParams:
 
     def __init__(self,
+                 plane: MsgPlane,
                  fieldLength: float = PLANAR_PARAM.mapLength,
                  fieldHeight: float = PLANAR_PARAM.mapHeight,
                  obstacleMaxWidth: float = PLANAR_PARAM.obstacleMaxWidth,
                  obstacleMinWidth: float = PLANAR_PARAM.obstacleMinWidth,
                  obstacleDepth: float = PLANAR_PARAM.obstacleDepth,
-                 mapOrigin_2D: np.ndarray = None,
-                 mapOrigin_3D: np.ndarray = None,
-                 n_hat: np.ndarray = None,
                  numObstacles: int = PLANAR_PARAM.numObstacles):
         
         self.fieldLength = fieldLength
@@ -82,9 +81,6 @@ class PlanarVTOLParams:
         self.obstacleMaxWidth = obstacleMaxWidth
         self.obstacleMinWidth = obstacleMinWidth
         self.obstacleDepth = obstacleDepth
-        self.mapOrigin_2D = mapOrigin_2D
-        self.mapOrigin_3D = mapOrigin_3D# this is also called p0
-        self.n_hat = n_hat
         self.numObstacles = numObstacles
 
 
@@ -102,21 +98,18 @@ class PlanarVTOLParams:
         self.searchDimension_3D_start = self.startPosition
         self.searchDimension_3D_end = self.endPosition
 
-        self.searchDimension_3D_projected_start = projectPosition_toPlane(pos_3D=self.searchDimension_3D_start,
-                                                                          p_0=self.mapOrigin_3D,
-                                                                          n_hat=n_hat)
 
-        self.searchDimension_3D_projected_end = projectPosition_toPlane(pos_3D=self.searchDimension_3D_end,
-                                                                          p_0=self.mapOrigin_3D,
-                                                                          n_hat=n_hat)
+        self.searchDimension_3D_projected_start = projectPosition_toPlane(vec_3D_init=self.searchDimension_3D_start,
+                                                                          plane=plane)
+
+        self.searchDimension_3D_projected_end = projectPosition_toPlane(vec_3D_init=self.searchDimension_3D_end,
+                                                                        plane=plane)
 
         self.searchDimensions_2D_start = map_3D_to_2D(vec_3D=self.searchDimension_3D_projected_start,
-                                                 n_hat=n_hat,
-                                                 p0=self.mapOrigin_3D)
-        
+                                                      plane=plane)
+
         self.searchdimensions_2D_end = map_3D_to_2D(vec_3D=self.searchDimension_3D_projected_end,
-                                               n_hat=n_hat,
-                                               p0=self.mapOrigin_3D)
+                                                    plane=plane)
         
         potato = 0
 
@@ -137,7 +130,7 @@ class PlanarVTOLSimplifiedParams:
         startStepSize = stepSize / 2.0
         
         north_start = startStepSize
-        altitude_start = startStepSize
+        down_start = -startStepSize
 
         #creates the dimensions of the individual obstacles (from the center as reference)
         #needs to be in the order of first depth, and then the variable dimensions 
@@ -148,12 +141,13 @@ class PlanarVTOLSimplifiedParams:
         
         #gets the search dimensions
         self.startPosition_2D = np.array([[0.0],[0.0]])
-        self.endPosition_2D = np.array([[fieldLength],[fieldLength]])
+        #Please note that we are going up, so we need it to have a negative height
+        self.endPosition_2D = np.array([[fieldLength],[-fieldLength]])
 
-        self.startPosition_3D = map_2D_to_3D_planeMsg(vec_2D=self.startPosition_2D,
-                                                      plane_msg=self.plane)
-        self.endPosition_3D = map_2D_to_3D_planeMsg(vec_2D=self.endPosition_2D,
-                                                    plane_msg=self.plane)
+        self.startPosition_3D = map_2D_to_3D(vec_2D=self.startPosition_2D,
+                                             plane=self.plane)
+        self.endPosition_3D = map_2D_to_3D(vec_2D=self.endPosition_2D,
+                                           plane=self.plane)
 
         self.positionsList_2D = []
         #iterates over north
@@ -161,9 +155,9 @@ class PlanarVTOLSimplifiedParams:
             #iterates over altitude
             for j in range(numObstacles_line):
                 currentNorth = north_start + i*stepSize
-                currentAltitude = altitude_start + j*stepSize
+                currentDown = down_start - j*stepSize
 
-                self.positionsList_2D.append(np.array([[currentNorth],[currentAltitude]]))
+                self.positionsList_2D.append(np.array([[currentNorth],[currentDown]]))
 
 class FloatingBlocksParams:
 
@@ -222,11 +216,6 @@ class MsgWorldMap:
 
         plane_msg = self.cityParams.plane
 
-        self.Q = getPlaneBasis(n_hat=plane_msg.n_hat)
-
-        self.p0 = plane_msg.origin_3D
-        plane_msg = self.cityParams.plane
-
         Rot_subspaceToWorld = getRotFromPlane(plane=plane_msg)
         Rot_worldToSubspace = Rot_subspaceToWorld.T
 
@@ -235,8 +224,8 @@ class MsgWorldMap:
         for position_2D in self.cityParams.obstaclePositions_list:
 
             #gets the 3D position
-            position_3D = map_2D_to_3D_planeMsg(vec_2D=position_2D,
-                                                plane_msg=plane_msg)
+            position_3D = map_2D_to_3D(vec_2D=position_2D,
+                                       plane=plane_msg)
             #gets the position in the subspace
             position_3D_subspace = Rot_worldToSubspace @ position_3D
 
@@ -315,16 +304,14 @@ class MsgWorldMap:
         potato = 0
 
 
+    #'''
     def initPlanarVTOLSimplified_map(self):
 
-        plane_msg = self.planarVTOLSimplified_params.plane
+        self.plane_msg = self.planarVTOLSimplified_params.plane
 
-        self.Q = getPlaneBasis(n_hat=plane_msg.n_hat)
-
-        self.p0 = plane_msg.origin_3D
 
         #gets the rotation from the subspace to the world frame
-        Rot_subspaceToWorld = getRotFromUnitVec(unitVec=plane_msg.n_hat)
+        Rot_subspaceToWorld = getRotFromUnitVec(unitVec=self.plane_msg.n_hat)
         Rot_worldToSubspace = Rot_subspaceToWorld.T
         
         self.obstaclesList = []
@@ -333,8 +320,8 @@ class MsgWorldMap:
         for position_2D in self.planarVTOLSimplified_params.positionsList_2D:
 
             #gets the position in 3 Dimensions in the world frame
-            position_3D_world = map_2D_to_3D_planeMsg(vec_2D=position_2D,
-                                                plane_msg=plane_msg)
+            position_3D_world = map_2D_to_3D(vec_2D=position_2D,
+                                             plane=self.plane_msg)
 
             #gets the position in the subspace frame
             position_3D_subspace = Rot_worldToSubspace @ position_3D_world
@@ -344,6 +331,7 @@ class MsgWorldMap:
                                                translation_obs=position_3D_subspace,
                                                rotation_obsToWorld=Rot_subspaceToWorld)
             self.obstaclesList.append(tempObstacle)
+    #'''
 
     #gets all of the A and b matrices for each of the obstacles as a large list
     def generateAbMatricesLists(self):
@@ -351,8 +339,6 @@ class MsgWorldMap:
         self.Ab_3D_list = []
 
         self.Ab_2D_list = []
-
-
 
         for obstacle in self.obstaclesList:
 
@@ -363,9 +349,11 @@ class MsgWorldMap:
 
             #case this is a 2D map
             if self.numDimensions_algorithm == 2:
+                Q = self.plane_msg.Q
+                plane_origin_3D = self.plane_msg.origin_3D
                 #gets the 2D equivalents
-                A_2D = A_3D_temp @ self.Q
-                b_2D = b_3D_temp - A_3D_temp @ self.p0
+                A_2D = A_3D_temp @ Q
+                b_2D = b_3D_temp - A_3D_temp @ plane_origin_3D
                 self.Ab_2D_list.append([A_2D, b_2D])
                 
     def get_obstacles(self):
@@ -399,20 +387,6 @@ class MsgWorldMap:
 
             self.feasibilityList.append(result.success)
 
-#defines the helper function to calculate the 3D world position given a position
-#in a 2D plane, assuming that the p0 used to define the plane is the origin
-#arguments:
-#pos_2D: the position in the 2D space of the plane
-#Q: the orthonormal basis for the plane perpendicular to the normal. It is also the nullspace
-    #of the n_hat vector. 3x2 matrix
-#p0: the position of the plane's origin expressed in the world 3D frame
-def getWorldPos(pos_2D: np.ndarray,
-                Q: np.ndarray,
-                p0: np.ndarray):
-    
-    #sets the 3D position
-    pos_3D = p0 + Q @ pos_2D
-    return pos_3D
 
 
 

@@ -3,8 +3,8 @@ from shapely.lib import equals_exact
 import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT_PARAM
 from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
 from rrt_mavsim.tools.rotations import euler_to_rotation, euler_to_rotation_2D
-from rrt_mavsim.tools.plane_projections import map_2D_to_3D, map_2D_to_3D_planeMsg
 from rrt_mavsim.message_types.msg_plane import MsgPlane
+from rrt_mavsim.tools.plane_projections_2 import map_2D_to_3D, map_3D_to_2D
 
 #A note on the following:
 #if this is a 2D flight corridor, the positions will be given in 2D,
@@ -186,8 +186,8 @@ class MsgFlightCorridor:
             normals = normals_2D
             vertices = []
             for vertex_2D in vertices_2D:
-                vertex = map_2D_to_3D_planeMsg(vec_2D=vertex_2D,
-                                               plane_msg=plane)
+                vertex = map_2D_to_3D(vec_2D=vertex_2D,
+                                      plane=plane)
                 vertices.append(vertex)
 
         elif self.numDimensions == 3:

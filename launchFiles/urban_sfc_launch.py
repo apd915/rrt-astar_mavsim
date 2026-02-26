@@ -34,10 +34,7 @@ path_gen = RRT_SFC_BSpline(
     chiMax=FLIGHT.Chi_max,
 )
 
-<<<<<<< HEAD
-
 # creates the city parameters
-=======
 city_params = CityParams(plane=CITY.plane_msg)
 worldMap = MsgWorldMap(
     obstacleFieldType=MapTypes.CITY,
@@ -47,15 +44,12 @@ worldMap = MsgWorldMap(
 
 viewer.drawMap(world_map=worldMap)
 
-<<<<<<< HEAD
-
 path_gen.generateSFCPaths(
     startPosition_3D=CITY.startPosition_3D,
     endPosition_3D=CITY.endPosition_3D,
     worldMap=worldMap,
     segmentLength=FLIGHT.segmentLength,
 )
-=======
 
 waypoints_not_smooth = path_gen.getWaypointsNotSmooth()
 waypoints_smooth = path_gen.getWaypointsSmooth()

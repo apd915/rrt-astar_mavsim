@@ -3,8 +3,8 @@ import numpy as np
 import rrt_mavsim.parameters.planner_parameters as PLAN
 from rrt_mavsim.message_types.msg_safeFlightCorridor import Msg_SFC
 from rrt_mavsim.message_types.msg_plane import MsgPlane
-from rrt_mavsim.tools.plane_projections import *
 from eVTOL_BSplines.submodules.path_generator.path_generation.obstacle import Obstacle
+from rrt_mavsim.tools.plane_projections_2 import map_3D_to_2D, map_2D_to_3D, projectPosition_toPlane
 
 
 
@@ -235,12 +235,12 @@ class RectangularObstacle:
         translation_world_3D = self.getTranslationWorld()
 
         #gets the projected position onto the plane, but still in 3 dimensions
-        translation_world_3D_projected = projectPositionToPlane_planeMsg(pos_3D=translation_world_3D,
-                                                                         plane_msg=plane_msg)
+        translation_world_3D_projected = projectPosition_toPlane(vec_3D_init=translation_world_3D,
+                                                                         plane=plane_msg)
         
         #gets the translation in the world 2D projected
-        translation_world_2D = map_3D_to_2D_planeMsg(vec_3D=translation_world_3D_projected,
-                                                     plane_msg=plane_msg)
+        translation_world_2D = map_3D_to_2D(vec_3D=translation_world_3D_projected,
+                                            plane=plane_msg)
         
 
         #gets the two applicable dimensions

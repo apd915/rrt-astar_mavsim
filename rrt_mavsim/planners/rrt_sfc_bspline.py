@@ -18,11 +18,8 @@ from rrt_mavsim.tools.intersections import (
     intersectionDetected,
 )
 from rrt_mavsim.tools.pathOptimization import findMinimumPath
-from rrt_mavsim.tools.plane_projections import (
-    projectPositionToPlane_planeMsg,
-    map_2D_to_3D,
-    map_3D_to_2D_planeMsg,
-)
+from rrt_mavsim.tools.plane_projections_2 import map_3D_to_2D, map_2D_to_3D, projectPosition_toPlane
+
 from rrt_mavsim.planners.bspline_generator import BSplineGenerator
 import heapq
 from rrt_mavsim.message_types.msg_plane import MsgPlane
@@ -61,6 +58,10 @@ class RRT_SFC_BSpline:
         # creates the B-Splines
         self.bsplineParam = BsplineParameters()
 
+        #sets the min distance end position
+        self.min_distance_end_Position = np.array([[0.0],[0.0]])
+        self.min_distance_to_end_Position = np.inf
+
         # initializes the waypoints smooth and not smooth
         self.waypoints_not_smooth = None
         self.waypoints_smooth = None
@@ -88,10 +89,8 @@ class RRT_SFC_BSpline:
             return self.__generatePaths_3D()
 
 
-<<<<<<< HEAD
     def generateControlPoints(
         self, waypoints: MsgWaypoints_SFC, numPointsPerUnit: float):
-=======
         self.bsplineGen = BSplineGenerator(
             numDimensions=self.numDimensions, degree=self.degree, M=self.M
         )
@@ -107,21 +106,15 @@ class RRT_SFC_BSpline:
         # gets the projected start and end positions.
         # that is, they are still in 3D, but they represent the 3D position
         # that will need to be projected onto the workplane
-        startPosition_3D_projected = projectPositionToPlane_planeMsg(
-            pos_3D=self.startPosition_3D, plane_msg=self.plane
-        )
-        endPosition_3D_projected = projectPositionToPlane_planeMsg(
-            pos_3D=self.endPosition_3D, plane_msg=self.plane
-        )
+        startPosition_3D_projected = projectPosition_toPlane(vec_3D_init=self.startPosition_3D,
+                                                             plane=self.plane)
+        endPosition_3D_projected = projectPosition_toPlane(vec_3D_init=self.endPosition_3D,
+                                                           plane=self.plane)
 
-        # gets the start position 2D and same for the end position
-        startPosition_2D = map_3D_to_2D_planeMsg(
-            vec_3D=startPosition_3D_projected, plane_msg=self.plane
-        )
-
-        endPosition_2D = map_3D_to_2D_planeMsg(
-            vec_3D=endPosition_3D_projected, plane_msg=self.plane
-        )
+        startPosition_2D = map_3D_to_2D(vec_3D=startPosition_3D_projected,
+                                        plane=self.plane)
+        endPosition_2D = map_3D_to_2D(vec_3D=endPosition_3D_projected,
+                                      plane=self.plane)
         #
         # adds the projected start position
         self.tree.add(
@@ -253,8 +246,14 @@ class RRT_SFC_BSpline:
                 # gets the vector from the new node to the end
                 newNode_toEnd = endPosition - newPositionCandidate
 
+
+
                 # gets the distance
                 newNode_toEnd_distance = np.linalg.norm(newNode_toEnd)
+
+                if newNode_toEnd_distance < self.min_distance_to_end_Position:
+                    self.min_distance_to_end_Position = newNode_toEnd_distance
+                    self.min_distance_end_Position = newPositionCandidate
 
                 # if we are within the ranga
                 if newNode_toEnd_distance < self.segmentLength:
@@ -396,7 +395,6 @@ def smoothPath_Dijkstra(waypoints_not_smooth: MsgWaypoints_SFC, worldMap: MsgWor
     )
 
     return waypoints_smooth
-
 
 # defines helper function to get positions pairs list
 def getPositionsPairsList(waypoints_not_smooth: MsgWaypoints_SFC):

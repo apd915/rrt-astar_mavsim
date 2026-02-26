@@ -71,7 +71,7 @@ def intersectionOccurred_Matrix(A1: np.ndarray,
 
     #uses linprog to find whether or not there exists a viable solution to the problem here
 
-    result = linprog(dummyVariable, A_ub=A_net, b_ub=b_net, method='highs')
+    result = linprog(dummyVariable, A_ub=A_net, b_ub=b_net, bounds=[(None, None), (None, None)], method='highs')
 
     intersectionOccurredTemp = result.success
 

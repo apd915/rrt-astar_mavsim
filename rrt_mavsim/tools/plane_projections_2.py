@@ -82,4 +82,29 @@ def map_3D_to_2D(vec_3D: np.ndarray,
     #returns the 2D position
     return pos_2D
 
+#creates the function to project a 3D position onto a plane (and stay in 3D)
+def projectPosition_toPlane(vec_3D_init: np.ndarray,
+                            plane: MsgPlane):
+
+    #gets the origin of the plane
+    p0 = plane.origin_3D
+    n_hat = plane.n_hat
+
+
+    #gets the vector from the plane's origin to the vec_3D_init
+    vec_planeOrigin_to_3D_init = vec_3D_init - p0
+
+    #gets the projection of this newfound vector onto n_hat
+    dot_product_temp = np.dot(a=vec_planeOrigin_to_3D_init.flatten(), b=n_hat.flatten())
+    n_hat_proj = (dot_product_temp/(np.linalg.norm(n_hat)**2))*n_hat
+
+    #gets the vector form the plant origin to the projected location
+    vec_planeOrigin_to_projectedPosition = vec_planeOrigin_to_3D_init - n_hat_proj
+
+    #gets the 3D projected vector
+    vec_3D_projected = vec_planeOrigin_to_projectedPosition + p0
+
+    return vec_3D_projected
+
+
 
