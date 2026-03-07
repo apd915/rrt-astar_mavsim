@@ -21,6 +21,9 @@ class MapTypes(str, Enum):
     PLANAR_VTOL = 'PlanarVTOL'
     MAZE = 'Maze'
     PLANAR_VTOL_SIMPLIFIED = 'PlanarVTOLSimplified'
+    PLANAR_WINDOW = 'PlanarWindow'
+    PLANAR_MAZE = 'PlanarMaze'
+
 
 
 
@@ -117,20 +120,25 @@ class PlanarVTOLSimplifiedParams:
 
     def __init__(self,
                  plane: MsgPlane,
-                 fieldLength: float = 1000.0,
+                 fieldLength: float = 2000.0,
+                 fieldHeight: float = 1000.0,
                  obstacleWidth: float = 100.0,
                  obstacleDepth: float = 50.0,
-                 numObstacles_line: int = 3):
+                 numObstacles_north: int = 3,
+                 numObstacles_down: int = 3):
         
         #save the plane message
         self.plane = plane
 
-        stepSize = fieldLength / numObstacles_line
+        stepSize_north = fieldLength / numObstacles_north
+        startStepSize_north = stepSize_north / 2.0
 
-        startStepSize = stepSize / 2.0
+
+        stepSize_down = fieldHeight / numObstacles_down
+        startStepSize_down = stepSize_down / 2.0
         
-        north_start = startStepSize
-        down_start = -startStepSize
+        north_start = startStepSize_north
+        down_start = -startStepSize_down
 
         #creates the dimensions of the individual obstacles (from the center as reference)
         #needs to be in the order of first depth, and then the variable dimensions 
@@ -142,7 +150,7 @@ class PlanarVTOLSimplifiedParams:
         #gets the search dimensions
         self.startPosition_2D = np.array([[0.0],[0.0]])
         #Please note that we are going up, so we need it to have a negative height
-        self.endPosition_2D = np.array([[fieldLength],[-fieldLength]])
+        self.endPosition_2D = np.array([[fieldLength],[-fieldHeight]])
 
         self.startPosition_3D = map_2D_to_3D(vec_2D=self.startPosition_2D,
                                              plane=self.plane)
@@ -151,17 +159,54 @@ class PlanarVTOLSimplifiedParams:
 
         self.positionsList_2D = []
         #iterates over north
-        for i in range(numObstacles_line):
+        for i in range(numObstacles_north):
             #iterates over altitude
-            for j in range(numObstacles_line):
-                currentNorth = north_start + i*stepSize
-                currentDown = down_start - j*stepSize
+            for j in range(numObstacles_down):
+                currentNorth = north_start + i*stepSize_north
+                currentDown = down_start - j*stepSize_down
 
                 self.positionsList_2D.append(np.array([[currentNorth],[currentDown]]))
 
 class FloatingBlocksParams:
 
     def __init__(self):
+
+        #creates the 
+
+
+
+
+
+        pass
+
+class PlanarWindowParam:
+
+    def __init__(self,
+                 northLength: float = 1500.0,
+                 downLength: float = 1000.0,
+                 windowWidth: float = 300.0):
+
+        self.northLength = northLength
+        self.downLength = downLength
+        self.windowWidth = windowWidth
+
+        self.obstacleLength = (downLength-windowWidth)/2.0
+        self.obstacleThickness = 50.0
+        self.obstacleHeight = 100.0
+
+
+
+
+
+
+
+
+
+class PlanarMazeParam:
+
+    def __init__(self):
+
+
 
         pass
 
@@ -214,9 +259,9 @@ class MsgWorldMap:
 
     def initCityMap(self):
 
-        plane_msg = self.cityParams.plane
+        self.plane_msg = self.cityParams.plane
 
-        Rot_subspaceToWorld = getRotFromPlane(plane=plane_msg)
+        Rot_subspaceToWorld = getRotFromPlane(plane=self.plane_msg)
         Rot_worldToSubspace = Rot_subspaceToWorld.T
 
         self.obstaclesList = []
@@ -225,7 +270,7 @@ class MsgWorldMap:
 
             #gets the 3D position
             position_3D = map_2D_to_3D(vec_2D=position_2D,
-                                       plane=plane_msg)
+                                       plane=self.plane_msg)
             #gets the position in the subspace
             position_3D_subspace = Rot_worldToSubspace @ position_3D
 

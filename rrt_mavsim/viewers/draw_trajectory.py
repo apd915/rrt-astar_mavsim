@@ -49,7 +49,7 @@ class DrawTrajectory:
                                                       width=lineWidth,
                                                       antialias=False,
                                                       mode='line_strip')
-        self.waypoint_plot_object.setGLOptions('translucent')  # puts waypoint behind obstacles
+        self.waypoint_plot_object.setGLOptions('opaque')  # puts waypoint behind obstacles
         # ============= options include
         # opaque        Enables depth testing and disables blending
         # translucent   Enables depth testing and blending

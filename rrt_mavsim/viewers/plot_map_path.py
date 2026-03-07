@@ -9,6 +9,7 @@ from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 import rrt_mavsim.parameters.plotter_parameters as PLOT
 from rrt_mavsim.message_types.msg_plane import MsgPlane
+from bsplinegenerator.bsplines import BsplineEvaluation
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 from copy import deepcopy
@@ -18,14 +19,22 @@ class PlotMapPath:
     def __init__(
         self,
         map: MsgWorldMap,
-        waypoints_not_smooth: MsgWaypoints_SFC = None,
-        waypoints_smooth: MsgWaypoints_SFC = None,
-        plane: MsgPlane = None,
+        waypoints_not_smooth: MsgWaypoints_SFC | None = None,
+        waypoints_smooth: MsgWaypoints_SFC | None = None,
+        controlPoints_not_smooth: np.ndarray | None= None,
+        controlPoints_smooth: np.ndarray  | None = None,
+        plane: MsgPlane | None = None,
+        degree: int = 3,
     ):
         self.map = map
         self.waypoints_not_smooth = waypoints_not_smooth
         self.waypoints_smooth = waypoints_smooth
+        self.controlPoints_not_smooth = controlPoints_not_smooth
+        self.controlPoints_smooth = controlPoints_smooth
         self.plane = plane
+        self.degree=degree
+
+        self.numSamplesPerSegment = 100
 
     def plot(
         self, x_limits: tuple, y_limits: tuple, z_limits: tuple, aspectRatio: list
@@ -40,6 +49,24 @@ class PlotMapPath:
 
         if self.waypoints_smooth is not None:
             self.plotWaypoints(ax=ax, waypoints=self.waypoints_smooth, color="purple")
+
+
+        if self.controlPoints_not_smooth is not None:
+            #evalueates the control points not smooth for a sampling
+            bspline_not_smooth = BsplineEvaluation(control_points=self.controlPoints_not_smooth,
+                                                   order=self.degree,
+                                                   start_time=0.0)
+
+            notSmooth_samples, time_notSmooth = bspline_not_smooth.get_spline_data(num_data_points_per_interval=self.numSamplesPerSegment)
+            
+        if self.controlPoints_smooth is not None:
+            #evalueates the control points not smooth for a sampling
+            bspline_smooth = BsplineEvaluation(control_points=self.controlPoints_smooth,
+                                                   order=self.degree,
+                                                   start_time=0.0)
+
+            smooth_samples, time_notSmooth = bspline_smooth.get_spline_data(num_data_points_per_interval=self.numSamplesPerSegment)
+
 
         # Set equal aspect ratio
         ax.set_box_aspect(aspectRatio)
@@ -135,6 +162,11 @@ class PlotMapPath:
             ax.add_collection3d(tempObstacle_poly)
 
         testPoint = 0
+
+
+    def plotTrajectory(self, ax, controlPoints: np.ndarray, spline_sampled_points: np.ndarray, color: str):
+
+        pass
 
     def getObstacleMeshes(self, vertices: list[np.ndarray]):
         # obtains the flattened vertices

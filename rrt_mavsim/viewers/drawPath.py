@@ -4,7 +4,7 @@ from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
 from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 import rrt_mavsim.parameters.display_parameters as DISPLAY
 from rrt_mavsim.message_types.msg_plane import MsgPlane
-from rrt_mavsim.tools.plane_projections import map_2D_to_3D_planeMsg
+from rrt_mavsim.tools.plane_projections_2 import map_2D_to_3D
 from bsplinegenerator.bsplines import BsplineEvaluation
 
 
@@ -52,11 +52,11 @@ class DrawPath:
         bspline_sampled_points, bspline_time_data = bspline.get_spline_data(num_data_points_per_interval=self.numDataPointsPerInterval)
 
         #get the sampled points expressed in 3D
-        bspline_sampled_points_3D = map_2D_to_3D_planeMsg(vec_2D=bspline_sampled_points,
-                                                          plane_msg=self.plane)
+        bspline_sampled_points_3D = map_2D_to_3D(vec_2D=bspline_sampled_points,
+                                                          plane=self.plane)
 
-        controlPoints_3D = map_2D_to_3D_planeMsg(vec_2D=controlPoints,
-                                                 plane_msg=self.plane)
+        controlPoints_3D = map_2D_to_3D(vec_2D=controlPoints,
+                                                 plane=self.plane)
 
         #gets the bplsine sampled points and rotates them into the altiude frame
         bspline_sampled_points_altitude = self.R_ned_to_alt @ bspline_sampled_points_3D
