@@ -75,6 +75,11 @@ class BSplineGenerator:
         if self.objective_type == ObjectiveTypes.MIN_DISTANCE:
             objectiveFunction = self.objective_minimum_distance(controlPoints_cpVar=controlPoints_cpVar)
 
+        elif self.objective_type == ObjectiveTypes.MIN_VELOCITY:
+            objectiveFunction = self.objective_minimum_velocity(controlPoints_cpVar=controlPoints_cpVar)
+
+        elif self.objective_type == ObjectiveTypes.MIN_ACCELERATION:
+            objectiveFunction = self.objective_minimum_acceleration(controlPoints_cpVar=controlPoints_cpVar)
 
 
         #section to solve the problem itself
@@ -100,6 +105,30 @@ class BSplineGenerator:
 
         #returns the objective
         return minimizeLength_objectiveFunction
+
+    #define sthe objective function to minimize velocity
+    def objective_minimum_velocity(self,
+                                   controlPoints_cpVar: cvp.Variable):
+        #gets the acceleration control points (which we will use to minimize velocitu)
+        accelerationControlPoints_cp =  controlPoints_cpVar[:,2:] - 2*controlPoints_cpVar[:,1:-1] + controlPoints_cpVar[:,0:-2]
+
+        minimizeVelocity_objectiveFunction = cvp.Minimize(cvp.sum(cvp.norm(accelerationControlPoints_cp, axis=1)))
+
+
+        return minimizeVelocity_objectiveFunction
+
+    #defines the objective function to minimize Acceleration
+    def objective_minimum_acceleration(self,
+                                       controlPoints_cpVar: cvp.Variable):
+
+        jerkControlPoints_cp = controlPoints_cpVar[:,3:] - 3*controlPoints_cpVar[:,2:-1] + 3*controlPoints_cpVar[:,1:-2] - controlPoints_cpVar[:,0:-3]
+
+        minimizeAcceleration_objectiveFunction = cvp.Minimize(cvp.sum(cvp.norm(jerkControlPoints_cp, axis=1)))
+
+        return minimizeAcceleration_objectiveFunction
+        
+
+
 
     
 

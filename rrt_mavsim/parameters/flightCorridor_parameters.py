@@ -20,7 +20,7 @@ M = 10
 MinTurnRadius = 300.0
 
 # number of points per unit length
-numPoints_perUnit = 10 * (degree + M) / segmentLength
+numPoints_perUnit = 5 * (degree + M) / segmentLength
 
 # number of initial paths
 numInitialPaths = 1

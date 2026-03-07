@@ -1,8 +1,7 @@
+
 #defines the function to draw the waypoints 
 import numpy as np
 import pyqtgraph.opengl as gl
-from rrt_mavsim.message_types.msg_waypoints import MsgWaypoints_SFC
-from rrt_mavsim.message_types.msg_flight_corridors import MsgFlightCorridor
 import rrt_mavsim.parameters.display_parameters as DISPLAY
 from rrt_mavsim.message_types.msg_plane import MsgPlane
 
@@ -16,39 +15,43 @@ R = np.array([[0, 1, 0],
 red = (1.0, 0.0, 0.0, 1.0)
 purple = (170/255, 0, 1.0, 1.0)
 
-class DrawWaypoints:
+class DrawControlPoints:
 
 
     def __init__(self,
-                 waypoints: MsgWaypoints_SFC,
+                 controlPoints_list: list[np.ndarray],
                  window: gl.GLViewWidget,
                  plane: MsgPlane,
                  R_ned_to_alt: np.ndarray,
-                 lineColor: np.ndarray = red):
+                 lineColor: tuple = red):
 
         #saves the Rotation matrix, which is the rotation from NED to altitude frame
         self.R_ned_to_alt = R_ned_to_alt
 
         #gets the dimension
-        numDimensions = waypoints.numDimensions
+        numDimensions = np.shape(controlPoints_list[0])[0]
 
-        #gets the list of SFCs
-        flightCorridor_list = waypoints.getAllFlightCorridors()
 
         self.plane = plane
 
-        for flightCorridor in flightCorridor_list:
+        for controlPointArray in controlPoints_list:
 
             if numDimensions == 2:
-                self.drawSFC_2D(flightCorridor=flightCorridor,
-                                color=lineColor,
-                                lineWidth=DISPLAY.flightCorridor_lineWidth,
-                                window=window)
-                
-            elif numDimensions == 3:
 
-                self.drawSFC_3D(sfc=flightCorridor)
+                self.drawControlPoints_2D()
 
+
+    #defines how to draw control points in 2 dimensions
+    def drawControlPoints_2D(self,
+                             controlPoints: np.ndarray,
+                             color: np.ndarray,
+                             lineWidth: float,
+                             pointWidth: float,
+                             window: gl.GLViewWidget)
+
+
+        #gets the control points in the altitude frame
+        controlPoints_altitude = self.R_ned_to_alt @ controlPoints
 
     #defines the draw 2 dimensions thing
     def drawSFC_2D(self,
@@ -74,17 +77,16 @@ class DrawWaypoints:
             #gets the edge concatenateion
             edge_concatenated = np.concatenate((currentVertex_rotated.T, nextVertex_rotated.T), axis=0)
             
-            colorList = np.tile(color, (2,1))
             #creates the lineplot item
             linePlot = gl.GLLinePlotItem(pos=edge_concatenated,
-                                           color=colorList,
+                                           color=color,
                                            width=lineWidth,
                                            antialias=True,
                                            mode='line_strip')
             linePlot.setGLOptions('opaque')
 
             #adds the item to the window
-            window.addItem(linePlot)
+            window.addItem(item=linePlot)
 
 
         pass

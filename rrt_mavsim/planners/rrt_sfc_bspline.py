@@ -1,3 +1,4 @@
+from cvxpy import Objective
 import numpy as np
 from rrt_mavsim.planners.bspline_parameters import BsplineParameters
 from rrt_mavsim.message_types.msg_bspline_conditions import MsgBsplineConditions
@@ -20,7 +21,7 @@ from rrt_mavsim.tools.intersections import (
 from rrt_mavsim.tools.pathOptimization import findMinimumPath
 from rrt_mavsim.tools.plane_projections_2 import map_3D_to_2D, map_2D_to_3D, projectPosition_toPlane
 
-from rrt_mavsim.planners.bspline_generator import BSplineGenerator
+from rrt_mavsim.planners.bspline_generator import BSplineGenerator, ObjectiveTypes
 import heapq
 from rrt_mavsim.message_types.msg_plane import MsgPlane
 
@@ -89,10 +90,12 @@ class RRT_SFC_BSpline:
             return self.__generatePaths_3D()
 
 
-    def generateControlPoints(
-        self, waypoints: MsgWaypoints_SFC, numPointsPerUnit: float):
+    def generateControlPoints(self, 
+                              waypoints: MsgWaypoints_SFC, 
+                              numPointsPerUnit: float,
+                              objectiveType: ObjectiveTypes = ObjectiveTypes.MIN_DISTANCE):
         self.bsplineGen = BSplineGenerator(
-            numDimensions=self.numDimensions, degree=self.degree, M=self.M
+            numDimensions=self.numDimensions, degree=self.degree, M=self.M, objective_type=objectiveType
         )
 
         outputControlPoints = self.bsplineGen.generatePath(

@@ -1,6 +1,7 @@
 # plots the obstacles for the map, and the path itself using matplotlib
 # instead of OpenGL, which is used for the actual simulations. This should look
 # a lot nicer.
+from cvxpy import vec
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
@@ -12,7 +13,9 @@ from rrt_mavsim.message_types.msg_plane import MsgPlane
 from bsplinegenerator.bsplines import BsplineEvaluation
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+from rrt_mavsim.tools.plane_projections_2 import map_2D_to_3D
 from copy import deepcopy
+
 
 
 class PlotMapPath:
@@ -21,16 +24,16 @@ class PlotMapPath:
         map: MsgWorldMap,
         waypoints_not_smooth: MsgWaypoints_SFC | None = None,
         waypoints_smooth: MsgWaypoints_SFC | None = None,
-        controlPoints_not_smooth: np.ndarray | None= None,
-        controlPoints_smooth: np.ndarray  | None = None,
+        controlPoints_not_smooth_list: list[np.ndarray] | None= None,
+        controlPoints_smooth_list: list[np.ndarray]  | None = None,
         plane: MsgPlane | None = None,
         degree: int = 3,
     ):
         self.map = map
         self.waypoints_not_smooth = waypoints_not_smooth
         self.waypoints_smooth = waypoints_smooth
-        self.controlPoints_not_smooth = controlPoints_not_smooth
-        self.controlPoints_smooth = controlPoints_smooth
+        self.controlPoints_not_smooth_list = controlPoints_not_smooth_list
+        self.controlPoints_smooth_list = controlPoints_smooth_list
         self.plane = plane
         self.degree=degree
 
@@ -51,21 +54,35 @@ class PlotMapPath:
             self.plotWaypoints(ax=ax, waypoints=self.waypoints_smooth, color="purple")
 
 
-        if self.controlPoints_not_smooth is not None:
-            #evalueates the control points not smooth for a sampling
-            bspline_not_smooth = BsplineEvaluation(control_points=self.controlPoints_not_smooth,
-                                                   order=self.degree,
-                                                   start_time=0.0)
+        if self.controlPoints_not_smooth_list is not None:
 
-            notSmooth_samples, time_notSmooth = bspline_not_smooth.get_spline_data(num_data_points_per_interval=self.numSamplesPerSegment)
+            for controlPoints in self.controlPoints_not_smooth_list:
+                #evalueates the control points not smooth for a sampling
+                #iterates over all of the control points lists
+                bspline_not_smooth = BsplineEvaluation(control_points=controlPoints,
+                                                       order=self.degree,
+                                                       start_time=0.0)
+
+                notSmooth_samples, time_notSmooth = bspline_not_smooth.get_spline_data(num_data_points_per_interval=self.numSamplesPerSegment)
+
+                self.plotTrajectory(ax=ax,
+                                    controlPoints=controlPoints,
+                                    spline_sampled_points=notSmooth_samples,
+                                    color='green')
             
-        if self.controlPoints_smooth is not None:
-            #evalueates the control points not smooth for a sampling
-            bspline_smooth = BsplineEvaluation(control_points=self.controlPoints_smooth,
-                                                   order=self.degree,
-                                                   start_time=0.0)
+        if self.controlPoints_smooth_list is not None:
+            for controlPoints in self.controlPoints_smooth_list:
+                #evalueates the control points not smooth for a sampling
+                bspline_smooth = BsplineEvaluation(control_points=controlPoints,
+                                                       order=self.degree,
+                                                       start_time=0.0)
 
-            smooth_samples, time_notSmooth = bspline_smooth.get_spline_data(num_data_points_per_interval=self.numSamplesPerSegment)
+                smooth_samples, time_notSmooth = bspline_smooth.get_spline_data(num_data_points_per_interval=self.numSamplesPerSegment)
+
+                self.plotTrajectory(ax=ax,
+                                    controlPoints=controlPoints,
+                                    spline_sampled_points=smooth_samples,
+                                    color='orange')
 
 
         # Set equal aspect ratio
@@ -119,11 +136,6 @@ class PlotMapPath:
                 zorder=10,
             )
 
-            #
-
-            testPoint = 0
-
-        testPoint = 0
 
     def plotMap(self, ax):
         obstaclesList = self.map.get_obstacles()
@@ -164,7 +176,42 @@ class PlotMapPath:
         testPoint = 0
 
 
-    def plotTrajectory(self, ax, controlPoints: np.ndarray, spline_sampled_points: np.ndarray, color: str):
+    def plotTrajectory(self, ax, controlPoints: np.ndarray, spline_sampled_points: np.ndarray, color_list: str):
+
+        #converts the control points and sampled points to 3D
+        controlPoints_3D = map_2D_to_3D(vec_2D=controlPoints,
+                                        plane=self.plane)
+        #gets them in the altitude frame
+        controlPoints_3D_altitude = PLOT.R_NED_to_Altitude @ controlPoints_3D
+
+        #gets the x y and z components of the control points
+        ctrl_x = controlPoints_3D_altitude[0,:]
+        ctrl_y = controlPoints_3D_altitude[1,:]
+        ctrl_z = controlPoints_3D_altitude[2,:]
+
+
+        #scatterPlots the control points
+        ax.scatter(ctrl_x,
+                   ctrl_y,
+                   ctrl_z,
+                   color=color,
+                   s=2,
+                   zorder=10)
+        
+        spline_sampled_points_3D = map_2D_to_3D(vec_2D=spline_sampled_points,
+                                                plane=self.plane)
+        spline_sampledPoints_3D_altitude = PLOT.R_NED_to_Altitude @ spline_sampled_points_3D
+
+        spline_x = spline_sampledPoints_3D_altitude[0,:]
+        spline_y = spline_sampledPoints_3D_altitude[1,:]
+        spline_z = spline_sampledPoints_3D_altitude[2,:]
+
+        ax.plot(spline_x,
+                spline_y,
+                spline_z,
+                color=color,
+                linewidth=1,
+                zorder=10)
 
         pass
 

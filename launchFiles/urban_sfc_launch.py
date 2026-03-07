@@ -10,8 +10,11 @@ import rrt_mavsim.parameters.flightCorridor_parameters as FLIGHT
 from rrt_mavsim.viewers.view_manager import ViewManager
 from rrt_mavsim.planners.rrt_sfc_bspline import RRT_SFC_BSpline
 from rrt_mavsim.viewers.plot_map_path import PlotMapPath
+from rrt_mavsim.planners.bspline_generator import ObjectiveTypes
+import matplotlib.pyplot as plt
 
 viewer = ViewManager()
+
 
 
 # gets the altitude
@@ -53,11 +56,34 @@ path_gen.generateSFCPaths(
 
 waypoints_not_smooth = path_gen.getWaypointsNotSmooth()
 waypoints_smooth = path_gen.getWaypointsSmooth()
+
 tree = path_gen.getTree()
-controlPoints = path_gen.generateControlPoints(
-    waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit
+
+controlPoints_minDistance_notSmooth = path_gen.generateControlPoints(
+    waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_DISTANCE
+)
+controlPoints_minVelocity_notSmooth = path_gen.generateControlPoints(
+    waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_VELOCITY
+)
+controlPoints_minAccel_notSmooth = path_gen.generateControlPoints(
+    waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_ACCELERATION
 )
 
+controlPoints_minDistance_smooth = path_gen.generateControlPoints(
+    waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_DISTANCE
+)
+controlPoints_minVelocity_smooth = path_gen.generateControlPoints(
+    waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_VELOCITY
+)
+controlPoints_minAccel_smooth = path_gen.generateControlPoints(
+    waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_ACCELERATION
+)
+
+controlPointsList = [controlPoints_minDistance_smooth,
+                     controlPoints_minVelocity_smooth,
+                     controlPoints_minAccel_smooth]
+
+#plots the not smooth control points
 viewer.update_planning_tree(
     waypoints_not_smooth=waypoints_not_smooth,
     waypoints_smooth=waypoints_smooth,
@@ -66,7 +92,7 @@ viewer.update_planning_tree(
     numdimensions=CITY.numDimensions,
     R_ned_to_alt=CITY.R,
     world_map=worldMap,
-    optimizedControlPoints=controlPoints,
+    controlPoints_list=controlPointsList,
     plane=CITY.plane_msg,
 )
 
@@ -74,6 +100,8 @@ plotter = PlotMapPath(
     map=worldMap,
     waypoints_not_smooth=waypoints_not_smooth,
     waypoints_smooth=waypoints_smooth,
+    controlPoints_not_smooth_list=None,
+    controlPoints_smooth_list=controlPointsList,
     plane=CITY.plane_msg,
 )
 

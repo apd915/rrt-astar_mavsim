@@ -14,7 +14,9 @@ class ViewManager:
         self.planningFlag = planningFlag
 
         # creates a Q widget application
-        self.app = pg.QtWidgets.QApplication([])
+        self.app = pg.QtWidgets.QApplication.instance()
+        if self.app is None:
+            self.app = pg.QtWidgets.QApplication([])
 
         if self.planningFlag:
             self.planner_viewer = PlannerViewer(app=self.app)
@@ -28,7 +30,7 @@ class ViewManager:
         R_ned_to_alt: np.ndarray,
         tree: MsgWaypoints_SFC,
         world_map: MsgWorldMap,
-        optimizedControlPoints: np.ndarray,
+        controlPoints_list: list[np.ndarray],
         plane: MsgPlane = None
     ):
         self.planner_viewer.draw_tree_and_map(
@@ -37,9 +39,9 @@ class ViewManager:
             dimension=numdimensions,
             degree=degree,
             R_ned_to_alt=R_ned_to_alt,
-            waypoints_smooth=waypoints_smooth,
-            optimizedControlPoints=optimizedControlPoints,
             waypoints_not_smooth=waypoints_not_smooth,
+            waypoints_smooth=waypoints_smooth,
+            controlPoints_list=controlPoints_list,
             plane=plane
         )
 

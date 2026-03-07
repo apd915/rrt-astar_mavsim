@@ -14,11 +14,16 @@ from rrt_mavsim.message_types.msg_plane import MsgPlane
 from rrt_mavsim.viewers.drawPath import DrawPath
 
 
-red = (1.0, 0.0, 0.0, 1.0)
-purple = (170/255, 0, 1.0, 1.0)
-yellow = (1.0, 1.0, 0.0, 1.0)
-green = (0, 153/255, 0, 1.0)
-orange = (204/255, 102/255, 0.0, 1.0)
+red = np.array([[1.0, 0.0, 0.0, 1.0]])
+purple = np.array([[170/255, 0, 1.0, 1.0]])
+yellow = np.array([[1.0, 1.0, 0.0, 1.0]])
+green = np.array([[0.0, 1.0, 0.0, 1.0]])
+orange = np.array([[204/255, 102/255, 0.0, 1.0]])
+
+
+
+#creates the threesome list of colors
+colorThreesome = [green, yellow, orange]
 
 
 class PlannerViewer:
@@ -56,34 +61,35 @@ class PlannerViewer:
                           dimension: int,
                           tree: MsgWaypoints_SFC,
                           R_ned_to_alt: np.ndarray,
-                          waypoints_smooth: MsgWaypoints_SFC,
                           waypoints_not_smooth: MsgWaypoints_SFC,
-                          optimizedControlPoints: np.ndarray = None,
+                          waypoints_smooth: MsgWaypoints_SFC,
+                          controlPoints_list: list[np.ndarray] = None,
                           plane: MsgPlane = None):
+
+        self.window.clear()
         
         DrawMap(map=worldMap,
                 window=self.window)
         
+        #draws the waypoints out
+        if waypoints_not_smooth is not None:
+            DrawWaypoints(waypoints=waypoints_not_smooth,
+                          R_ned_to_alt=R_ned_to_alt,
+                          window=self.window,
+                          plane=plane,
+                          lineColor=red)
 
-        #draws the waypoints out
-        DrawWaypoints(waypoints=waypoints_not_smooth,
-                      R_ned_to_alt=R_ned_to_alt,
-                      window=self.window,
-                      plane=plane,
-                      lineColor=red)
-        
-        #draws the waypoints out
         DrawWaypoints(waypoints=waypoints_smooth,
-                      R_ned_to_alt=R_ned_to_alt,
-                      window=self.window,
-                      plane=plane,
-                      lineColor=purple)
+                   R_ned_to_alt=R_ned_to_alt,
+                   window=self.window,
+                   plane=plane,
+                   lineColor=purple)
         
-        DrawPath(controlPoints=optimizedControlPoints,
+        DrawPath(controlPoints_list=controlPoints_list,
                  window=self.window,
                  R_ned_to_alt=R_ned_to_alt,
                  degree=degree,
-                 lineColor=green,
+                 color_list=colorThreesome,
                  lineWidth=2.0,
                  pointWidth=4.0,
                  plane=plane,
