@@ -5,6 +5,7 @@ import rrt_mavsim.parameters.planner_parameters as PLAN
 import rrt_mavsim.parameters.planarVTOL_map_parameters as PLANAR_PARAM
 import rrt_mavsim.parameters.city_parameters as CITY
 import rrt_mavsim.parameters.planar_maze_parameters as PLANAR_MAZE
+import rrt_mavsim.parameters.floatingBlocks_parameters as FLOATING_PARAM
 from rrt_mavsim.tools.obstacles import RectangularObstacle
 from scipy.optimize import linprog
 import time
@@ -12,6 +13,7 @@ from enum import Enum
 from rrt_mavsim.tools.getEulerUnit import getRotFromUnitVec, getRotFromPlane
 from rrt_mavsim.tools.plane_projections_2 import map_3D_to_2D, map_2D_to_3D, projectPosition_toPlane
 from rrt_mavsim.message_types.msg_plane import MsgPlane
+from itertools import product
 
 
 #creates the enumeration for 
@@ -24,6 +26,7 @@ class MapTypes(str, Enum):
     PLANAR_VTOL_SIMPLIFIED = 'PlanarVTOLSimplified'
     PLANAR_WINDOW = 'PlanarWindow'
     PLANAR_MAZE = 'PlanarMaze'
+
 
 class CityParams:
 
@@ -167,15 +170,40 @@ class PlanarVTOLSimplifiedParams:
 
 class FloatingBlocksParams:
 
-    def __init__(self):
+    def __init__(self,
+                 startPosition: np.ndarray = FLOATING_PARAM.startPosition_3D,
+                 endPosition: np.ndarray = FLOATING_PARAM.endPosition_3D,
+                 numObstacles_perSide: int = FLOATING_PARAM.numBlocks_perSide,
+                 blockWidth: float = FLOATING_PARAM.blockWidth,
+                 numDimensions: int = FLOATING_PARAM.numDimensions):
 
         #creates the 
 
+        self.startPosition = startPosition
+        self.endPosition = endPosition
+        self.numObstacles_perSide = numObstacles_perSide
+        self.numDimensions = numDimensions
 
+        self.blockWidth = blockWidth
+        self.obstacleDimensions = np.array([[blockWidth],[blockWidth],[blockWidth]])
 
+        x_increment = endPosition[0,0]/(numObstacles_perSide)
+        y_increment = endPosition[1,0]/(numObstacles_perSide)
+        z_increment = endPosition[2,0]/(numObstacles_perSide)
 
+        x_start = endPosition[0,0]/(numObstacles_perSide*2.0)
+        y_start = endPosition[1,0]/(numObstacles_perSide*2.0)
+        z_start = endPosition[2,0]/(numObstacles_perSide*2.0)
 
-        pass
+        self.positions = []
+
+        #iterates over the whole thing to get all the obstacles
+        for i, j, k in product(range(numObstacles_perSide), repeat=3):
+
+            currentPosition = np.array([[x_start + i*x_increment],
+                                        [y_start + j*y_increment],
+                                        [z_start + k*z_increment]])
+            self.positions.append(currentPosition)
 
 class PlanarWindowParam:
 
@@ -192,7 +220,6 @@ class PlanarWindowParam:
         self.obstacleThickness = 50.0
         self.obstacleHeight = 100.0
 
-
 class PlanarMazeParam:
 
     def __init__(self,
@@ -204,7 +231,8 @@ class PlanarMazeParam:
                  teethHeightRatio: float = PLANAR_MAZE.teethHeightRatio,
                  teethWidthRatio: float = PLANAR_MAZE.teethWidthRatio,
                  startPosition: np.ndarray = PLANAR_MAZE.startPosition,
-                 endPosition: np.ndarray = PLANAR_MAZE.endPosition):
+                 endPosition: np.ndarray = PLANAR_MAZE.endPosition,
+                 obstacleDepth: float = PLANAR_MAZE.obstacleDepth):
 
         self.plane = plane
         self.numTeeth = numTeeth
@@ -221,7 +249,7 @@ class PlanarMazeParam:
         spacingWidth = self.width / self.numSpaces
         teethHeight = self.teethHeightRatio*height
         teethWidth = spacingWidth*self.teethWidthRatio
-        self.teethDimensions = np.array([[teethHeight],[teethWidth]])
+        self.teethDimensions = np.array([[teethHeight],[teethWidth],[obstacleDepth]])
 
         self.teethPositions = []
 
@@ -243,7 +271,8 @@ class PlanarMazeParam:
         self.barWidth = width*((numTeeth-1.0)/numTeeth)
 
         self.barDimensions = np.array([[barHeight],
-                                       [self.barWidth]])
+                                       [self.barWidth],
+                                       [obstacleDepth]])
 
         #creates the top and bottom bars
         self.bottomBarLocation = np.array([[-barHeight/2.0],
@@ -256,7 +285,6 @@ class PlanarMazeParam:
         self.endPosition = endPosition
 
 
-
 class MsgWorldMap:
 
     #creates the init function
@@ -266,7 +294,8 @@ class MsgWorldMap:
                  planarVTOL_Params: PlanarVTOLParams = None,
                  planarVTOLSimplified_Params: PlanarVTOLSimplifiedParams = None,
                  cityParams: CityParams = None,
-                 planarMazeParams: PlanarMazeParam = None):
+                 planarMazeParams: PlanarMazeParam = None,
+                 floatingBlocksParams: FloatingBlocksParams = None):
         
 
         #saves all fo the above
@@ -278,6 +307,7 @@ class MsgWorldMap:
         self.planarVTOLSimplified_params = planarVTOLSimplified_Params
         self.cityParams = cityParams
         self.planarMazeParams = planarMazeParams
+        self.floatingBlocksParams = floatingBlocksParams
 
         if obstacleFieldType == MapTypes.PLANAR_VTOL:
 
@@ -306,6 +336,11 @@ class MsgWorldMap:
             self.initPlanarMazeMap()
             self.searchDimensions_start = planarMazeParams.startPosition
             self.searchDimensions_end = planarMazeParams.endPosition
+
+        elif obstacleFieldType == MapTypes.FLOATING_BLOCKS:
+            self.initFloatingBlocksMap()
+            self.searchDimensions_start = self.floatingBlocksParams.startPosition
+            self.searchDimensions_end = self.floatingBlocksParams.endPosition
 
         self.generateAbMatricesLists()
         self.generateFeasibilityList()
@@ -431,9 +466,6 @@ class MsgWorldMap:
                                                rotation_obsToWorld=Rot_subspaceToWorld)
             self.obstaclesList.append(tempObstacle)
 
-
-        def initPlanarMaze(self,
-                           )
     #'''
     def initPlanarMazeMap(self):
 
@@ -483,6 +515,26 @@ class MsgWorldMap:
                                              rotation_obsToWorld=Rot_subspaceToWorld)
 
         self.obstaclesList.append(topBarObstacle)
+
+
+    def initFloatingBlocksMap(self):
+
+        Rot_subspaceToWorld = np.eye(3)
+        Rot_worldToSubspace = Rot_subspaceToWorld.T
+
+        self.obstaclesList = []
+
+        for obstaclePosition in self.floatingBlocksParams.positions:
+
+            tempObstacle = RectangularObstacle(dimensions_obs=self.floatingBlocksParams.obstacleDimensions,
+                                               translation_obs=obstaclePosition,
+                                               rotation_obsToWorld=Rot_subspaceToWorld)
+            self.obstaclesList.append(tempObstacle)
+
+    
+
+        pass
+
 
 
     #gets all of the A and b matrices for each of the obstacles as a large list

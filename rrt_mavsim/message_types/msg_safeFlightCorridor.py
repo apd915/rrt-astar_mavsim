@@ -155,6 +155,16 @@ class Msg_SFC:
 
     #does the same thing for the 3-Dimensional case
     def __getNormalsVertices_3d(self):
+
+        finalVertices = self.getAllVertices_3D()
+
+        #calls the function to get the 3d vertices and nromals
+        normalVectors_list, verticesForNormalVectors_list = self.generate3DNormalsVertices(vertices=finalVertices)
+
+        return normalVectors_list, verticesForNormalVectors_list
+
+
+    def getAllVertices_3D(self):
         #gets the size of the x dimension
         x_dimension = self.dimensions[0,0]
         #gets the size of the y dimensions
@@ -191,11 +201,9 @@ class Msg_SFC:
         #adds the translation t othe rotated vertices
         finalVertices = rotatedVertices + translation_World
 
-        #calls the function to get the 3d vertices and nromals
-        normalVectors_list, verticesForNormalVectors_list = self.generate3DNormalsVertices(vertices=finalVertices)
 
-        return normalVectors_list, verticesForNormalVectors_list
-
+        return finalVertices
+    
 
 
     #defines the function to get the normal vectors in 3D

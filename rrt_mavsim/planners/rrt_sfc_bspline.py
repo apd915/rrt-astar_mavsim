@@ -40,8 +40,8 @@ class RRT_SFC_BSpline:
         rho: np.ndarray,
         step_length: float,
         numDesiredInitPaths: int,
-        plane: MsgPlane,
         chiMax: float,  # The maximum angle between safe flight corridors
+        plane: MsgPlane = None,
     ):
         # saves all of them
         self.numDimensions = numDimensions
@@ -165,6 +165,10 @@ class RRT_SFC_BSpline:
             tree=self.tree, endPosition=self.endPosition_3D
         )
 
+        # gets the waypoints smooth
+        self.waypoints_smooth = smoothPath_Dijkstra(
+            waypoints_not_smooth=self.waypoints_not_smooth, worldMap=self.worldMap
+        )
         # returns the not smooth waypoints
         return self.waypoints_not_smooth
 

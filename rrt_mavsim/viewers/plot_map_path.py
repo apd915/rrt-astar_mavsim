@@ -101,6 +101,18 @@ class PlotMapPath:
         # calls the plot map function
 
     def plotWaypoints(self, ax, waypoints: MsgWaypoints_SFC, color: str):
+
+        numDimensions = waypoints.numDimensions
+        if numDimensions == 2:
+            self._plotWaypoints_2D(ax=ax, waypoints=waypoints, color=color)
+        elif numDimensions == 3:
+            self._plotWaypoints_3D(ax=ax, waypoints=waypoints, color=color)
+
+
+        testPoint = 0
+
+    def _plotWaypoints_2D(self, ax, waypoints: MsgWaypoints_SFC, color: str):
+
         # from the waypoints not smooth, we get the list of all safe flight corridors
         safeFlightCorridors_list = waypoints.getAllFlightCorridors()
 
@@ -135,6 +147,21 @@ class PlotMapPath:
                 linewidth=2,
                 zorder=10,
             )
+        pass
+
+    def _plotWaypoints_3D(self, ax, waypoints: MsgWaypoints_SFC, color: str):
+
+        safeFlightCorridors_list = waypoints.getAllFlightCorridors()
+
+        for safeFlightCorridor in safeFlightCorridors_list:
+            normalsList, verticesList = safeFlightCorridor.getNormalsVertices_3D()
+            verticesList = safeFlightCorridor.getAllVertices_3D()
+            
+
+            testPoint = 0
+
+
+
 
 
     def plotMap(self, ax):

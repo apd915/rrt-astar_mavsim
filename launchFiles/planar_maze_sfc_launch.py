@@ -68,7 +68,7 @@ controlPoints_minDistance_notSmooth = path_gen.generateControlPoints(
     waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_DISTANCE
 )
 controlPoints_minVelocity_notSmooth = path_gen.generateControlPoints(
-    waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_VELOMAZE
+    waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_VELOCITY
 )
 controlPoints_minAccel_notSmooth = path_gen.generateControlPoints(
     waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_ACCELERATION
@@ -78,7 +78,7 @@ controlPoints_minDistance_smooth = path_gen.generateControlPoints(
     waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_DISTANCE
 )
 controlPoints_minVelocity_smooth = path_gen.generateControlPoints(
-    waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_VELOMAZE
+    waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_VELOCITY
 )
 controlPoints_minAccel_smooth = path_gen.generateControlPoints(
     waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_ACCELERATION

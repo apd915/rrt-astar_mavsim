@@ -4,13 +4,15 @@ from rrt_mavsim.tools.plane_projections_2 import map_2D_to_3D
 
 height = 2000.0
 width = 6000.0
-numTeeth = 3
+numTeeth = 6
 
 barWidthRatio = 0.1
 teethWidthRatio = 0.4
 teethHeightRatio = 0.8
 
 barHeight = 200.0
+
+obstacleDepth = 300.0
 
 numDimensions = 2
 
@@ -39,7 +41,7 @@ degree = 3
 
 
 #creates the x, y, and z limits for plotting 
-x_limits = (-200, 2300)
+x_limits = (-200, 6300)
 y_limits = (-200, 2300)
 z_limits = (-200, 500)
 

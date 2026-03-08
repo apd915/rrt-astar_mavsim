@@ -66,12 +66,22 @@ def intersectionOccurred_Matrix(A1: np.ndarray,
     A_net = np.concatenate((A1, A2), axis=0)
     b_net = np.concatenate((b1, b2), axis=0)
 
+    numDimensions = A_net.shape[1]
+
     #creates a dummy variable that the linprog function will use for the feasibility here
-    dummyVariable = np.zeros(A_net.shape[1])
+    dummyVariable = np.zeros(numDimensions)
+
+    if numDimensions == 2:
+        tempBounds = [(None, None), (None, None)]
+    elif numDimensions == 3:
+        tempBounds = [(None, None), (None, None), (None, None)]
+    else: 
+        tempBounds = [(None, None), (None, None)]
+
 
     #uses linprog to find whether or not there exists a viable solution to the problem here
 
-    result = linprog(dummyVariable, A_ub=A_net, b_ub=b_net, bounds=[(None, None), (None, None)], method='highs')
+    result = linprog(dummyVariable, A_ub=A_net, b_ub=b_net, bounds=tempBounds, method='highs')
 
     intersectionOccurredTemp = result.success
 
