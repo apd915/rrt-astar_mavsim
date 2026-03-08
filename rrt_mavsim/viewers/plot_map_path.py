@@ -16,7 +16,7 @@ from matplotlib.axes import Axes
 from rrt_mavsim.tools.plane_projections_2 import map_2D_to_3D
 from copy import deepcopy
 
-
+color_list = ['green','yellow','orange']
 
 class PlotMapPath:
     def __init__(
@@ -56,7 +56,7 @@ class PlotMapPath:
 
         if self.controlPoints_not_smooth_list is not None:
 
-            for controlPoints in self.controlPoints_not_smooth_list:
+            for controlPoints, color in zip(self.controlPoints_not_smooth_list, color_list):
                 #evalueates the control points not smooth for a sampling
                 #iterates over all of the control points lists
                 bspline_not_smooth = BsplineEvaluation(control_points=controlPoints,
@@ -68,10 +68,10 @@ class PlotMapPath:
                 self.plotTrajectory(ax=ax,
                                     controlPoints=controlPoints,
                                     spline_sampled_points=notSmooth_samples,
-                                    color='green')
+                                    color=color)
             
         if self.controlPoints_smooth_list is not None:
-            for controlPoints in self.controlPoints_smooth_list:
+            for controlPoints, color in zip(self.controlPoints_smooth_list, color_list):
                 #evalueates the control points not smooth for a sampling
                 bspline_smooth = BsplineEvaluation(control_points=controlPoints,
                                                        order=self.degree,
@@ -82,7 +82,7 @@ class PlotMapPath:
                 self.plotTrajectory(ax=ax,
                                     controlPoints=controlPoints,
                                     spline_sampled_points=smooth_samples,
-                                    color='orange')
+                                    color=color)
 
 
         # Set equal aspect ratio
@@ -176,7 +176,7 @@ class PlotMapPath:
         testPoint = 0
 
 
-    def plotTrajectory(self, ax, controlPoints: np.ndarray, spline_sampled_points: np.ndarray, color_list: str):
+    def plotTrajectory(self, ax, controlPoints: np.ndarray, spline_sampled_points: np.ndarray, color: str):
 
         #converts the control points and sampled points to 3D
         controlPoints_3D = map_2D_to_3D(vec_2D=controlPoints,
