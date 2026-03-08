@@ -2,39 +2,41 @@ import numpy as np
 from rrt_mavsim.message_types.msg_plane import MsgPlane
 from rrt_mavsim.tools.plane_projections_2 import map_2D_to_3D
 
-#sets the number of dimensions for this algorithm
+height = 2000.0
+width = 6000.0
+numTeeth = 3
+
+barWidthRatio = 0.1
+teethWidthRatio = 0.4
+teethHeightRatio = 0.8
+
+barHeight = 200.0
+
 numDimensions = 2
-degree = 3
 
-# create random city map
-city_width      = 2000.  # the city is of size (width)x(width)
-building_height = 300.   # maximum height of buildings
-num_blocks      = 4    # number of blocks in city
-streetWidthRatio = 0.8   # percent of block that is street.
-obstacleWidthRatio = 1.0 - streetWidthRatio
-obstacleWidth_sigma = 20.0
-minObstacleWidth = 20.0
-
+startPosition = np.array([[0.0],[0.0]])
+endPosition = np.array([[height],[width]])
 
 #creates the operational altitude for the 2D planar planning algorithm
 altitude = 100.0
-
-#creates the start and end positions in 2D
-startPosition_2D = np.array([[0.0],[0.0]])
-endPosition_2D = np.array([[city_width],[city_width]])
 
 mapOrigin_2D = np.array([[0.0],[0.0]])
 mapOrigin_3D = np.array([[0.0],[0.0],[-altitude]])
 n_hat = np.array([[0.0],[0.0],[1.0]])
 
-
 plane_msg = MsgPlane(n_hat=n_hat,origin_3D=mapOrigin_3D)
 
-startPosition_3D = map_2D_to_3D(vec_2D=startPosition_2D,
+
+startPosition_3D = map_2D_to_3D(vec_2D=startPosition,
                                 plane=plane_msg)
-endPosition_3D = map_2D_to_3D(vec_2D=endPosition_2D,
+endPosition_3D = map_2D_to_3D(vec_2D=endPosition,
                               plane=plane_msg)
+
+
 R = np.array([[0, 1, 0], [1, 0, 0], [0, 0, -1]])
+degree = 3
+
+
 
 #creates the x, y, and z limits for plotting 
 x_limits = (-200, 2300)
@@ -52,3 +54,4 @@ aspect_ratio = [x_range/max_range, y_range/max_range, z_range/max_range]
 
 
 #sets the aspect ratio for the plotter
+

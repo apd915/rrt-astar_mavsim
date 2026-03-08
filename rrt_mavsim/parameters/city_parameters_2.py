@@ -6,10 +6,12 @@ from rrt_mavsim.tools.plane_projections_2 import map_2D_to_3D
 numDimensions = 2
 degree = 3
 
+
+
 # create random city map
 city_width      = 2000.  # the city is of size (width)x(width)
 building_height = 300.   # maximum height of buildings
-num_blocks      = 4    # number of blocks in city
+num_blocks      = 6    # number of blocks in city
 streetWidthRatio = 0.8   # percent of block that is street.
 obstacleWidthRatio = 1.0 - streetWidthRatio
 obstacleWidth_sigma = 20.0

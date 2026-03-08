@@ -4,6 +4,7 @@ import numpy as np
 import rrt_mavsim.parameters.planner_parameters as PLAN
 import rrt_mavsim.parameters.planarVTOL_map_parameters as PLANAR_PARAM
 import rrt_mavsim.parameters.city_parameters as CITY
+import rrt_mavsim.parameters.planar_maze_parameters as PLANAR_MAZE
 from rrt_mavsim.tools.obstacles import RectangularObstacle
 from scipy.optimize import linprog
 import time
@@ -23,9 +24,6 @@ class MapTypes(str, Enum):
     PLANAR_VTOL_SIMPLIFIED = 'PlanarVTOLSimplified'
     PLANAR_WINDOW = 'PlanarWindow'
     PLANAR_MAZE = 'PlanarMaze'
-
-
-
 
 class CityParams:
 
@@ -195,20 +193,69 @@ class PlanarWindowParam:
         self.obstacleHeight = 100.0
 
 
-
-
-
-
-
-
-
 class PlanarMazeParam:
 
-    def __init__(self):
+    def __init__(self,
+                 plane: MsgPlane = PLANAR_MAZE.plane_msg,
+                 numTeeth: int = PLANAR_MAZE.numTeeth,
+                 width: float = PLANAR_MAZE.width,
+                 height: float = PLANAR_MAZE.height,
+                 barHeight: float = PLANAR_MAZE.barHeight,
+                 teethHeightRatio: float = PLANAR_MAZE.teethHeightRatio,
+                 teethWidthRatio: float = PLANAR_MAZE.teethWidthRatio,
+                 startPosition: np.ndarray = PLANAR_MAZE.startPosition,
+                 endPosition: np.ndarray = PLANAR_MAZE.endPosition):
+
+        self.plane = plane
+        self.numTeeth = numTeeth
+        self.numSpaces = int(self.numTeeth - 1)
+        self.width = width
+        self.height = height
+        self.barHeight = barHeight
+        self.teethHeightRatio = teethHeightRatio
+        self.teethWidthRatio = teethWidthRatio
+        self.startPosition = startPosition
+        self.endPosition = endPosition
+
+        #creates the obstacles
+        spacingWidth = self.width / self.numSpaces
+        teethHeight = self.teethHeightRatio*height
+        teethWidth = spacingWidth*self.teethWidthRatio
+        self.teethDimensions = np.array([[teethHeight],[teethWidth]])
+
+        self.teethPositions = []
+
+        for i in range(numTeeth):
+            
+            eastPosition = i*spacingWidth
+
+            if i % 2 == 0:
+                northPosition = height - (teethHeight/2.0)
+            else:
+                northPosition = teethHeight/2.0
+
+            currentPosition = np.array([[northPosition],
+                                        [eastPosition]])
+
+            self.teethPositions.append(currentPosition)
 
 
+        self.barWidth = width*((numTeeth-1.0)/numTeeth)
 
-        pass
+        self.barDimensions = np.array([[barHeight],
+                                       [self.barWidth]])
+
+        #creates the top and bottom bars
+        self.bottomBarLocation = np.array([[-barHeight/2.0],
+                                           [spacingWidth + self.barWidth/2.0]])
+
+        self.topBarLocation = np.array([[self.height + barHeight/2.0],
+                                        [self.barWidth/2.0]])
+
+        self.startPosition = startPosition
+        self.endPosition = endPosition
+
+
 
 class MsgWorldMap:
 
@@ -218,7 +265,8 @@ class MsgWorldMap:
                  numDimensions_algorithm: int,
                  planarVTOL_Params: PlanarVTOLParams = None,
                  planarVTOLSimplified_Params: PlanarVTOLSimplifiedParams = None,
-                 cityParams: CityParams = None):
+                 cityParams: CityParams = None,
+                 planarMazeParams: PlanarMazeParam = None):
         
 
         #saves all fo the above
@@ -229,6 +277,7 @@ class MsgWorldMap:
         self.pln_VTOL_Param = planarVTOL_Params
         self.planarVTOLSimplified_params = planarVTOLSimplified_Params
         self.cityParams = cityParams
+        self.planarMazeParams = planarMazeParams
 
         if obstacleFieldType == MapTypes.PLANAR_VTOL:
 
@@ -251,6 +300,12 @@ class MsgWorldMap:
 
             self.searchDimensions_start = cityParams.startPosition
             self.searchDimensions_end = cityParams.endPosition
+
+        elif obstacleFieldType == MapTypes.PLANAR_MAZE:
+
+            self.initPlanarMazeMap()
+            self.searchDimensions_start = planarMazeParams.startPosition
+            self.searchDimensions_end = planarMazeParams.endPosition
 
         self.generateAbMatricesLists()
         self.generateFeasibilityList()
@@ -348,7 +403,6 @@ class MsgWorldMap:
 
         potato = 0
 
-
     #'''
     def initPlanarVTOLSimplified_map(self):
 
@@ -376,7 +430,60 @@ class MsgWorldMap:
                                                translation_obs=position_3D_subspace,
                                                rotation_obsToWorld=Rot_subspaceToWorld)
             self.obstaclesList.append(tempObstacle)
+
+
+        def initPlanarMaze(self,
+                           )
     #'''
+    def initPlanarMazeMap(self):
+
+        #iterates over 
+        self.plane_msg = self.planarMazeParams.plane
+
+        self.obstaclesList = []
+
+        Rot_subspaceToWorld = getRotFromPlane(plane=self.plane_msg)
+        Rot_worldToSubspace = Rot_subspaceToWorld.T
+        
+        #iterates over all the teeth positions
+        for position_2D in self.planarMazeParams.teethPositions:
+            position_3D = map_2D_to_3D(vec_2D=position_2D,
+                                       plane=self.plane_msg)
+
+            #gets the position in the subspace
+            position_3D_subspace = Rot_worldToSubspace @ position_3D
+
+
+            #creates the temp obstacle 
+            temp_toothObstacle = RectangularObstacle(dimensions_obs=self.planarMazeParams.teethDimensions,
+                                                translation_obs=position_3D_subspace,
+                                                rotation_obsToWorld=Rot_subspaceToWorld)
+
+            self.obstaclesList.append(temp_toothObstacle)
+
+        #adds the top and bottom bars
+        bottomBar_position_3D = map_2D_to_3D(vec_2D=self.planarMazeParams.bottomBarLocation,
+                                             plane=self.plane_msg)
+
+        bottomBar_position_3D_subspace = Rot_worldToSubspace @ bottomBar_position_3D
+
+        bottomBarObstacle = RectangularObstacle(dimensions_obs=self.planarMazeParams.barDimensions,
+                                             translation_obs=bottomBar_position_3D_subspace,
+                                             rotation_obsToWorld=Rot_subspaceToWorld)
+
+        self.obstaclesList.append(bottomBarObstacle)
+
+        topBar_position_3D = map_2D_to_3D(vec_2D=self.planarMazeParams.topBarLocation,
+                                          plane=self.plane_msg)
+
+        topBar_position_3D_subspace = Rot_worldToSubspace @ topBar_position_3D
+
+        topBarObstacle = RectangularObstacle(dimensions_obs=self.planarMazeParams.barDimensions,
+                                             translation_obs=topBar_position_3D_subspace,
+                                             rotation_obsToWorld=Rot_subspaceToWorld)
+
+        self.obstaclesList.append(topBarObstacle)
+
 
     #gets all of the A and b matrices for each of the obstacles as a large list
     def generateAbMatricesLists(self):
