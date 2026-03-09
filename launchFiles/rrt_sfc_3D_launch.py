@@ -137,24 +137,10 @@ ax3.set_title("B-Spline Curvatures")
 plt.show()
 
 
-#plots the not smooth control points
-viewer.update_planning_tree(
-    waypoints_not_smooth=waypoints_not_smooth,
-    waypoints_smooth=waypoints_smooth,
-    tree=tree,
-    degree=FLOATING_PARAM.degree,
-    numdimensions=FLOATING_PARAM.numDimensions,
-    R_ned_to_alt=FLOATING_PARAM.R,
-    world_map=worldMap,
-    controlPoints_list=controlPointsList,
-    plane=FLOATING_PARAM.plane_msg,
-)
-
 
 plotter_noWaypoints = PlotMapPath(
     map=worldMap,
     controlPoints_not_smooth_list=None,
-    plane=FLOATING_PARAM.plane_msg,
 )
 
 plotter_noWaypoints.plot(
@@ -169,7 +155,6 @@ plotter_noSpline = PlotMapPath(
     waypoints_not_smooth=waypoints_not_smooth,
     waypoints_smooth=waypoints_smooth,
     controlPoints_not_smooth_list=None,
-    plane=FLOATING_PARAM.plane_msg,
 )
 
 plotter_noSpline.plot(
@@ -184,7 +169,6 @@ plotter = PlotMapPath(
     waypoints_smooth=waypoints_smooth,
     controlPoints_not_smooth_list=None,
     controlPoints_smooth_list=controlPointsList,
-    plane=FLOATING_PARAM.plane_msg,
 )
 
 plotter.plot(

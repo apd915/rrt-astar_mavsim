@@ -13,6 +13,8 @@ from rrt_mavsim.viewers.plot_map_path import PlotMapPath
 from rrt_mavsim.planners.bspline_generator import ObjectiveTypes
 from bsplinegenerator.bsplines import BsplineEvaluation
 import matplotlib.pyplot as plt
+import cProfile
+import pstats
 import time
 
 viewer = ViewManager()
@@ -48,21 +50,26 @@ worldMap = MsgWorldMap(
 
 viewer.drawMap(world_map=worldMap)
 
-pathGen_startTime = time.time()
+rrt_profiler = cProfile.Profile()
+rrt_profiler.enable()
+rrt_startTime = time.time()
 path_gen.generateSFCPaths(
     startPosition_3D=CITY.startPosition_3D,
     endPosition_3D=CITY.endPosition_3D,
     worldMap=worldMap,
     segmentLength=FLIGHT.segmentLength,
 )
-pathGen_endTime = time.time()
-pathGenTime = pathGen_endTime - pathGen_startTime
-print("Path Gen Time: ", pathGenTime)
+rrt_endTime = time.time()
+rrt_Time = rrt_endTime - rrt_startTime
+
+rrt_profiler.disable()
+rrt_stats = pstats.Stats(rrt_profiler)
 
 waypoints_not_smooth = path_gen.getWaypointsNotSmooth()
 waypoints_smooth = path_gen.getWaypointsSmooth()
 
 tree = path_gen.getTree()
+
 
 controlPoints_minDistance_notSmooth = path_gen.generateControlPoints(
     waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_DISTANCE
@@ -74,6 +81,10 @@ controlPoints_minAccel_notSmooth = path_gen.generateControlPoints(
     waypoints=waypoints_not_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_ACCELERATION
 )
 
+
+ctrl_profiler = cProfile.Profile()
+ctrl_profiler.enable()
+
 controlPoints_minDistance_smooth = path_gen.generateControlPoints(
     waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_DISTANCE
 )
@@ -83,6 +94,9 @@ controlPoints_minVelocity_smooth = path_gen.generateControlPoints(
 controlPoints_minAccel_smooth = path_gen.generateControlPoints(
     waypoints=waypoints_smooth, numPointsPerUnit=FLIGHT.numPoints_perUnit, objectiveType=ObjectiveTypes.MIN_ACCELERATION
 )
+
+ctrl_profiler.disable()
+ctrl_stats = pstats.Stats(ctrl_profiler)
 
 controlPointsList = [controlPoints_minDistance_smooth,
                      controlPoints_minVelocity_smooth,

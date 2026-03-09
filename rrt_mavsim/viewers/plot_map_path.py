@@ -18,6 +18,14 @@ from copy import deepcopy
 
 color_list = ['green','yellow','orange']
 
+#creates the list of points for each side
+sideLists = [[0,1,2,3,0],#-75 3
+             [0,3,7,4,0],#-30 1
+             [0,1,5,4,0],#-75 2
+             [4,5,6,7,4],#75 3
+             [1,2,6,5,1],#730 1
+             [2,3,7,6,2]]#-75 2
+
 class PlotMapPath:
     def __init__(
         self,
@@ -154,12 +162,42 @@ class PlotMapPath:
         safeFlightCorridors_list = waypoints.getAllFlightCorridors()
 
         for safeFlightCorridor in safeFlightCorridors_list:
-            normalsList, verticesList = safeFlightCorridor.getNormalsVertices_3D()
-            verticesList = safeFlightCorridor.getAllVertices_3D()
-            
+            verticesArray = safeFlightCorridor.sfc.getAllVertices_3D()
+            numVertices = np.shape(verticesArray)[1]
 
-            testPoint = 0
+            verticesList = [verticesArray[:,i:(i+1)] for i in range(numVertices)]
 
+            #creates all of the sides
+            sideVertexLists = []
+
+            for side in sideLists:
+
+                tempSide = []
+
+                for index in side:
+
+                    tempVertex = verticesList[index]
+                    tempSide.append(tempVertex)
+
+                sideVerticesArray = np.concatenate((tempSide), axis=1)
+
+                #gets them rotated into the altitude frame
+                sideVerticesArray_rotated = PLOT.R_NED_to_Altitude @ sideVerticesArray
+
+                #plots the side
+                x_component = sideVerticesArray_rotated[0,:]
+                y_component = sideVerticesArray_rotated[1,:]
+                z_component = sideVerticesArray_rotated[2,:]
+
+                #plots this sode out
+                ax.plot(
+                    x_component,
+                    y_component,
+                    z_component,
+                    color=color,
+                    linewidth=2,
+                    zorder=1,
+                )
 
 
 
@@ -205,9 +243,23 @@ class PlotMapPath:
 
     def plotTrajectory(self, ax, controlPoints: np.ndarray, spline_sampled_points: np.ndarray, color: str):
 
-        #converts the control points and sampled points to 3D
-        controlPoints_3D = map_2D_to_3D(vec_2D=controlPoints,
-                                        plane=self.plane)
+
+        #gets the dimensionality of the control points
+        controlPoints_shape = np.shape(controlPoints)
+        numDimensions_controlPoints = controlPoints_shape[0]
+        numControlPoints = controlPoints_shape[1]
+
+        #case, the control points are 2D
+        if numDimensions_controlPoints == 2:
+            #converts the control points and sampled points to 3D
+            controlPoints_3D = map_2D_to_3D(vec_2D=controlPoints,
+                                            plane=self.plane)
+        elif numDimensions_controlPoints == 3:
+            controlPoints_3D = controlPoints
+
+        else:
+            controlPoints_3D = controlPoints
+
         #gets them in the altitude frame
         controlPoints_3D_altitude = PLOT.R_NED_to_Altitude @ controlPoints_3D
 
@@ -225,8 +277,14 @@ class PlotMapPath:
                    s=2,
                    zorder=10)
         
-        spline_sampled_points_3D = map_2D_to_3D(vec_2D=spline_sampled_points,
-                                                plane=self.plane)
+        #checks if the sampled points are 2D, and if so, maps them to 3D
+        if numDimensions_controlPoints == 2:
+
+            spline_sampled_points_3D = map_2D_to_3D(vec_2D=spline_sampled_points,
+                                                    plane=self.plane)
+        else:
+            spline_sampled_points_3D = spline_sampled_points
+
         spline_sampledPoints_3D_altitude = PLOT.R_NED_to_Altitude @ spline_sampled_points_3D
 
         spline_x = spline_sampledPoints_3D_altitude[0,:]
