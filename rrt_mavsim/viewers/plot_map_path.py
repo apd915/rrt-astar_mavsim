@@ -104,7 +104,9 @@ class PlotMapPath:
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_zlabel("Z")
-        plt.show()
+        ax.view_init(elev=0.0,azim=0.0)
+        plt.show(block=False)
+        plt.savefig('Bad Path.png', dpi=300)
 
         # calls the plot map function
 
