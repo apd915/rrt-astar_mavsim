@@ -34,7 +34,7 @@ path_gen = RRT_SFC_BSpline(
     step_length=FLIGHT.segmentLength,
     numDesiredInitPaths=FLIGHT.numInitialPaths,
     plane=MAZE.plane_msg,
-    chiMax=FLIGHT.Chi_max,
+   chiMax=FLIGHT.Chi_max,
 )
 
 #creates the planar Maze params
