@@ -549,7 +549,9 @@ class MsgWorldMap:
             obstacleSFCTemp = obstacle.getSFC()
 
             A_3D_temp, b_3D_temp = obstacleSFCTemp.getAbMatrices()
-            self.Ab_3D_list.append([A_3D_temp, b_3D_temp])
+            # The Msg_SFC object stores the center as 'translation'
+            center_3D = obstacleSFCTemp.translation
+            self.Ab_3D_list.append([A_3D_temp, b_3D_temp, center_3D])
 
             #case this is a 2D map
             if self.numDimensions_algorithm == 2:
@@ -558,7 +560,12 @@ class MsgWorldMap:
                 #gets the 2D equivalents
                 A_2D = A_3D_temp @ Q
                 b_2D = b_3D_temp - A_3D_temp @ plane_origin_3D
-                self.Ab_2D_list.append([A_2D, b_2D])
+
+                # We map the 3D center down to the 2D plane
+                center_2D = map_3D_to_2D(vec_3D=center_3D, plane=self.plane_msg)
+                
+                # Append the center as the 3rd element!
+                self.Ab_2D_list.append([A_2D, b_2D, center_2D])
                 
     def get_obstacles(self):
         return self.obstaclesList

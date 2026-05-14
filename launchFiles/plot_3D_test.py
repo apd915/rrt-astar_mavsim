@@ -1,6 +1,7 @@
 import os, sys
 import numpy as np
 from eVTOL_BSplines.message_types.msg_sfc import Msg_SFC
+from rrt_mavsim.message_types.msg_world_map import MsgWorldMap, FloatingBlocksParams, MapTypes, CityParams
 from rrt_mavsim.message_types.msg_plane import MsgPlane
 from rrt_mavsim.message_types.msg_world_map import MsgWorldMap, FloatingBlocksParams, MapTypes
 import rrt_mavsim.parameters.planner_parameters as PLAN
@@ -26,10 +27,25 @@ tempSFC = MsgFlightCorridor(numDimensions=3,
 waypoints = MsgWaypoints_SFC(numDimensions=3)
 waypoints.addSFC(sfc=tempSFC)
 
+# CITY
+# FLOATING_BLOCKS
+# PLANAR_VTOL
+# MAZE
+# PLANAR_VTOL_SIMPLIFIED
+# PLANAR_WINDOW
+# PLANAR_MAZE
+
+# 1. Create a geometric plane for the city to sit on (Standard XY plane)
+city_plane = MsgPlane(
+    origin_3D=np.array([[0.0], [0.0], [0.0]]),
+    n_hat=np.array([[0.0], [0.0], [1.0]])  # Normal vector pointing "up"
+)
+
+# 2. Instantiate the world map using the CITY type and CITY parameters
 worldMap = MsgWorldMap(
-    obstacleFieldType=MapTypes.FLOATING_BLOCKS,
-    numDimensions_algorithm=FLOATING_PARAM.numDimensions,
-    floatingBlocksParams=FloatingBlocksParams()
+    obstacleFieldType=MapTypes.CITY,
+    numDimensions_algorithm=3,  # Assuming you still want a 3D algorithm
+    cityParams=CityParams(plane=city_plane) # <--- This fixes your NoneType error!
 )
 
 plotter = PlotMapPath(map=worldMap,
@@ -43,3 +59,5 @@ plotter.plot(
 )
 
 testPoint = 0
+
+plt.show()

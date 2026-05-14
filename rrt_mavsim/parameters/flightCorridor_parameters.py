@@ -7,20 +7,20 @@ startExtension = 30.0
 endExtension = 30.0
 
 # sets the initial segment length
-segmentLength = 700.0
+segmentLength = 50.0
 
 # sets the rho variable
 rho = np.array([[1.0], [1.0], [1.0]])
 
 # sets the B-Spline degree
-degree = 3
+degree = 4
 # sets the number of intervals of interest
 M = 10
 # sets the minimum turning radius
-MinTurnRadius = 300.0
+MinTurnRadius = np.inf
 
 # number of points per unit length
-numPoints_perUnit = 5 * (degree + M) / segmentLength
+numPoints_perUnit = (degree + M) / segmentLength
 
 # number of initial paths
 numInitialPaths = 1
@@ -34,9 +34,9 @@ finalPosition_3D = np.array([[PLAN.city_width], [PLAN.city_width], [-PLAN.city_w
 
 
 # sets the width of the SFC
-width = 150.0
+width = 5.0
 # sets the height of the SFC (used only for 3D)
-height = 150.0
+height = 5.0
 
 # using the minimum turning radius and the width, we get the maximum angle between Safe flight Corridors
 # for them to be allowed to be added to

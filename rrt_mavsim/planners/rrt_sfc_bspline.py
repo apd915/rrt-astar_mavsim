@@ -67,6 +67,11 @@ class RRT_SFC_BSpline:
         self.waypoints_not_smooth = None
         self.waypoints_smooth = None
 
+        # --- NEW: Profiling Accumulators ---
+        self.time_sampling = 0.0
+        self.time_collision = 0.0
+        self.total_iterations = 0
+
     def generateSFCPaths(
         self,
         startPosition_3D: np.ndarray,
@@ -154,21 +159,46 @@ class RRT_SFC_BSpline:
 
         currentNumPathsFound = 0
 
+        # === HIGH LEVEL TIMERS ===
+        t_start_tree = time.perf_counter()
+
         while currentNumPathsFound < self.numDesiredInitPaths:
             # sets the found new path flag
             foundNewPathFlag = self.__extendInitialTree(endPosition=self.endPosition_3D)
 
             currentNumPathsFound += foundNewPathFlag
 
+        t_end_tree = time.perf_counter()
+
         # get the not smooth waypoints
         self.waypoints_not_smooth = findMinimumPath(
             tree=self.tree, endPosition=self.endPosition_3D
         )
 
+        t_end_extraction = time.perf_counter()
+
         # gets the waypoints smooth
         self.waypoints_smooth = smoothPath_Dijkstra(
             waypoints_not_smooth=self.waypoints_not_smooth, worldMap=self.worldMap
         )
+
+        t_end_smooth = time.perf_counter()
+
+        # === PRINT BENCHMARK REPORT ===
+        print("\n" + "="*50)
+        print(" FRONT-END RRT PROFILING REPORT")
+        print("="*50)
+        print(f"Total Nodes Sampled:      {self.total_iterations}")
+        print(f"1. Tree Generation Phase: {(t_end_tree - t_start_tree)*1000:.2f} ms")
+        from rrt_mavsim.tools.intersections import DEBUG_SKIPS, DEBUG_LINPROG_CALLS
+        print(f"   -> Collision Checks:   {self.time_collision*1000:.2f} ms")
+        print(f"      -> Broad Phase Skips: {DEBUG_SKIPS}")
+        print(f"      -> Linprog Calls:     {DEBUG_LINPROG_CALLS}")
+        print(f"   -> Nearest Neighbor:   {self.time_sampling*1000:.2f} ms")
+        print(f"2. Path Extraction Phase: {(t_end_extraction - t_end_tree)*1000:.2f} ms")
+        print(f"3. Dijkstra Smoothing:    {(t_end_smooth - t_end_extraction)*1000:.2f} ms")
+        print("="*50 + "\n")
+
         # returns the not smooth waypoints
         return self.waypoints_not_smooth
 
@@ -184,6 +214,9 @@ class RRT_SFC_BSpline:
 
         # iterates while it is not yet connected to the end
         while connectedToEnd is False:
+            self.total_iterations += 1  # Track how many nodes we test
+            # === TIMER 1: Sampling and Nearest Neighbor ===
+            t_sample_start = time.perf_counter()
             (
                 newPositionCandidate,
                 newPositionCandidate_cost,
@@ -193,6 +226,7 @@ class RRT_SFC_BSpline:
                 tree=self.tree,
                 segmentLength=self.segmentLength,
             )
+            self.time_sampling += (time.perf_counter() - t_sample_start)
 
             # obtains the parent position
             parentPosition = self.tree.getPosition(index=candidate_minCostParentIndex)
@@ -230,10 +264,13 @@ class RRT_SFC_BSpline:
 
                 testPoint = 0
 
+            # === TIMER 2: Primary Collision Check ===
+            t_col_start = time.perf_counter()
             # calls the function to check for intersection
             intersectionHappened = intersectionDetected(
                 corridor=sfc_candidate, world_map=self.worldMap
             )
+            self.time_collision += (time.perf_counter() - t_col_start)
             intersectionHappened_list.append(intersectionHappened)
 
             # if no intersection happened, and satisfies turn constraints add the canditdate to the tree
@@ -272,10 +309,12 @@ class RRT_SFC_BSpline:
                         numDimensions=self.numDimensions,
                     )
 
+                    t_col_start2 = time.perf_counter()
                     # calls the function to check for an intersection
                     intersectionHappened_end = intersectionDetected(
                         corridor=sfc_candidate_newToEnd, world_map=self.worldMap
                     )
+                    self.time_collision += (time.perf_counter() - t_col_start2)
                     intersectionHappened_list.append(intersectionHappened_end)
 
                     if intersectionHappened_end is False:
