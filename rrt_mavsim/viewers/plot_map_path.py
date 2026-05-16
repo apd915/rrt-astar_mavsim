@@ -315,3 +315,63 @@ class PlotMapPath:
             [vert_flat[4], vert_flat[5], vert_flat[6], vert_flat[7]],
         ]
         return meshes
+    
+    def plot_astar(self, ax, path, voxel_resolution):
+        obstaclesList = self.map.get_obstacles()
+
+        self.obstaclePositionsList_unrotated = []
+        self.obstaclePositionsList_rotated = []
+        self.meshes_obstacles = []
+
+        for obstacle in obstaclesList:
+            # gets the obstacle positions
+            obstaclePosition = obstacle.getTranslationWorld()
+            self.obstaclePositionsList_unrotated.append(obstaclePosition)
+
+            # gets the points rotated from the NED frame to the altitude frame
+            rotatedObstaclePosition = PLOT.R_NED_to_Altitude @ obstaclePosition
+            self.obstaclePositionsList_rotated.append(rotatedObstaclePosition)
+
+            # gets the object vertices
+            obstacleVertices_unrotated = obstacle.getVertices_obstacle_3D_list()
+
+            obstacleVertices_rotated = []
+
+            # rotates the positioning of the obstacle vertices so that down is up.
+            for obstacleVertex in obstacleVertices_unrotated:
+                rotatedVertex = PLOT.R_NED_to_Altitude @ obstacleVertex
+                obstacleVertices_rotated.append(rotatedVertex)
+
+            # gets the obstacle meshes
+            obstacleMeshes = self.getObstacleMeshes(vertices=obstacleVertices_rotated)
+            self.meshes_obstacles.append(obstacleMeshes)
+
+            # creates this obstacle
+            tempObstacle_poly = Poly3DCollection(
+                obstacleMeshes, alpha=1.0, facecolor="blue", edgecolor="k", zorder=1
+            )
+            ax.add_collection3d(tempObstacle_poly)
+
+        # 2. Plot the A* Path
+        path_x, path_y, path_z = zip(*path)
+        res = voxel_resolution
+        
+        # Convert path indices to physical meters
+        p_x_meters = np.array(path_x) * res
+        p_y_meters = np.array(path_y) * res
+        p_z_meters = np.array(path_z) * res
+
+        # Draw the path as a thick red line
+        ax.plot(p_x_meters, p_y_meters, p_z_meters, color='red', linewidth=3, label='A* Path')
+        
+        # Drop solid markers on the exact Start and Goal positions
+        ax.scatter(p_x_meters[0], p_y_meters[0], p_z_meters[0], color='green', s=100, label='Start')
+        ax.scatter(p_x_meters[-1], p_y_meters[-1], p_z_meters[-1], color='purple', s=100, label='Goal')
+
+        # Formatting
+        ax.set_xlabel('X (meters)')
+        ax.set_ylabel('Y (meters)')
+        ax.set_zlabel('Z (Altitude)')
+        ax.legend()
+
+        plt.show()

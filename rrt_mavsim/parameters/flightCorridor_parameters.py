@@ -2,9 +2,9 @@ import numpy as np
 import rrt_mavsim.parameters.planner_parameters as PLAN
 
 # sets the part that extends before the start position
-startExtension = 30.0
+startExtension = 5.0
 # sets the part that extends beyond the end position
-endExtension = 30.0
+endExtension = 5.0
 
 # sets the initial segment length
 segmentLength = 50.0
