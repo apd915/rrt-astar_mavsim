@@ -134,7 +134,8 @@ class MsgFlightCorridor:
                                     [self.height]])
         
         #gets the centerPosition. the center position is the translation vector in the world frame
-        centerPosition = self.primaryPosition + centerVectorNorm * (self.centerLength / 2.0)
+        shift_distance = -self.startExtension_length + (self.length / 2.0)
+        centerPosition = self.primaryPosition + centerVectorNorm * shift_distance
         self.translation_world = centerPosition
 
         #grom the center vector norm, we get the north and east components
